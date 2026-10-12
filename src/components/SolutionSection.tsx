@@ -46,7 +46,7 @@ export function SolutionSection({ onOpenDemo, onScrollToWaitlist }: SolutionSect
 
         {/* Feature 1: Mobile-first & Offline */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
-          <div className="lg:col-span-6 space-y-5 text-left order-2 lg:order-1">
+          <div className="lg:col-span-6 space-y-5 text-left order-1 lg:order-1">
             <div className="inline-flex items-center gap-2 font-mono text-xs font-bold text-blue-600 uppercase tracking-widest">
               <span>01. MOBILITÉ TOTALE</span>
             </div>
@@ -86,7 +86,7 @@ export function SolutionSection({ onOpenDemo, onScrollToWaitlist }: SolutionSect
             <div className="pt-2">
               <button
                 onClick={onOpenDemo}
-                className="px-5 py-2.5 rounded-xl border border-slate-300 hover:border-blue-600 text-slate-800 hover:text-blue-600 font-semibold text-sm transition-all flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl border border-slate-300 hover:border-blue-600 text-slate-800 hover:text-blue-600 font-semibold text-sm transition-all flex items-center gap-2 cursor-pointer min-h-[44px]"
               >
                 <span>Tester le mode chantier</span>
                 <ArrowRight className="w-4 h-4" />
@@ -95,7 +95,7 @@ export function SolutionSection({ onOpenDemo, onScrollToWaitlist }: SolutionSect
           </div>
 
           {/* 2026 Interactive Offline Tech Card (No fake mac buttons, clean architectural HUD) */}
-          <div className="lg:col-span-6 order-1 lg:order-2">
+          <div className="lg:col-span-6 order-2 lg:order-2">
             <div className="bg-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-800 relative overflow-hidden">
               {/* Subtle top laser glow */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-blue-400 to-transparent" />
@@ -163,7 +163,7 @@ export function SolutionSection({ onOpenDemo, onScrollToWaitlist }: SolutionSect
         {/* Feature 2: 100% Conforme 2026 */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
           {/* Visual Card 2: 2026 Compliance HUD (Cobalt & Slate) */}
-          <div className="lg:col-span-6">
+          <div className="lg:col-span-6 order-2 lg:order-1">
             <div className="bg-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-800 relative overflow-hidden">
               <div className="flex items-center justify-between pb-5 border-b border-slate-800 mb-5">
                 <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export function SolutionSection({ onOpenDemo, onScrollToWaitlist }: SolutionSect
             </div>
           </div>
 
-          <div className="lg:col-span-6 space-y-6 text-left">
+          <div className="lg:col-span-6 space-y-6 text-left order-1 lg:order-2">
             <div className="inline-flex items-center gap-2 font-mono text-xs font-bold text-blue-600 uppercase tracking-widest">
               <span>02. SÉCURITÉ JURIDIQUE</span>
             </div>
@@ -261,7 +261,7 @@ export function SolutionSection({ onOpenDemo, onScrollToWaitlist }: SolutionSect
             <div className="pt-2">
               <button
                 onClick={onScrollToWaitlist}
-                className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-md shadow-blue-600/20 cursor-pointer flex items-center gap-2"
+                className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-md shadow-blue-600/20 cursor-pointer flex items-center gap-2 min-h-[44px]"
               >
                 <span>Bloquer mon tarif -50% à vie</span>
                 <ArrowRight className="w-4 h-4" />
@@ -272,7 +272,7 @@ export function SolutionSection({ onOpenDemo, onScrollToWaitlist }: SolutionSect
 
         {/* Feature 3: Envoi immédiat */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
-          <div className="lg:col-span-6 space-y-6 text-left order-2 lg:order-1">
+          <div className="lg:col-span-6 space-y-6 text-left order-1 lg:order-1">
             <div className="inline-flex items-center gap-2 font-mono text-xs font-bold text-blue-600 uppercase tracking-widest">
               <span>03. VÉLOCITÉ COMMERCIALE</span>
             </div>
@@ -311,7 +311,7 @@ export function SolutionSection({ onOpenDemo, onScrollToWaitlist }: SolutionSect
             <div className="pt-2">
               <button
                 onClick={onOpenDemo}
-                className="px-5 py-2.5 rounded-xl border border-slate-300 hover:border-blue-600 text-slate-800 hover:text-blue-600 font-semibold text-sm transition-all flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl border border-slate-300 hover:border-blue-600 text-slate-800 hover:text-blue-600 font-semibold text-sm transition-all flex items-center gap-2 cursor-pointer min-h-[44px]"
               >
                 <span>Voir la signature en direct</span>
                 <ArrowRight className="w-4 h-4" />
@@ -320,7 +320,7 @@ export function SolutionSection({ onOpenDemo, onScrollToWaitlist }: SolutionSect
           </div>
 
           {/* Visual Card 3: 2026 SMS & Signature Flow - Unified Dark HUD */}
-          <div className="lg:col-span-6 order-1 lg:order-2">
+          <div className="lg:col-span-6 order-2 lg:order-2">
             <div className="bg-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-800 relative overflow-hidden space-y-4">
               {/* Subtle top laser glow */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-blue-400 to-transparent" />

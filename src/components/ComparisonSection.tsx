@@ -103,12 +103,17 @@ export function ComparisonSection({ onScrollToWaitlist }: ComparisonSectionProps
 
                 <div className="divide-y divide-slate-100 space-y-3 font-sans">
                   {comparisonRows.map((row, idx) => (
-                    <div key={idx} className="pt-3 first:pt-0 space-y-1">
+                    <div key={idx} className="pt-3 first:pt-0 space-y-1.5">
                       <div className="font-mono text-[11px] font-bold text-blue-800 uppercase tracking-wide">
                         {row.feature}
                       </div>
-                      <div className="text-sm font-semibold text-slate-900 leading-snug">
-                        {row.ourApp}
+                      <div className="text-sm font-bold text-slate-900 leading-snug flex items-start gap-1.5">
+                        <span className="w-4 h-4 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-extrabold">✓</span>
+                        <span>{row.ourApp.replace('✅ ', '')}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 bg-slate-50 rounded-lg py-1.5 px-2.5 border border-slate-200/70 flex items-start gap-1.5 font-sans">
+                        <span className="font-bold text-slate-400 shrink-0">vs Autres :</span>
+                        <span className="text-slate-500">{row.others.replace('❌ ', '')}</span>
                       </div>
                     </div>
                   ))}
@@ -117,7 +122,7 @@ export function ComparisonSection({ onScrollToWaitlist }: ComparisonSectionProps
                 <div className="pt-4 border-t border-slate-100">
                   <button
                     onClick={onScrollToWaitlist}
-                    className="w-full py-3.5 rounded-xl bg-blue-600 active:bg-blue-700 text-white font-heading font-bold text-sm shadow-md shadow-blue-600/25 flex items-center justify-center gap-2"
+                    className="w-full py-3.5 rounded-xl bg-blue-600 active:bg-blue-700 text-white font-heading font-bold text-sm shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 min-h-[48px]"
                   >
                     <span>Profiter de -50% à vie</span>
                     <ArrowRight className="w-4 h-4" />

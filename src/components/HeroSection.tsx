@@ -74,7 +74,7 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
             </div>
 
             {/* H1 Headline in Plus Jakarta Sans */}
-            <h1 className="font-heading text-[28px] xs:text-[32px] sm:text-5xl lg:text-[55px] font-extrabold text-white tracking-[-0.035em] leading-[1.18] sm:leading-[1.12]">
+            <h1 className="font-heading text-[30px] xs:text-[34px] sm:text-5xl lg:text-[55px] font-extrabold text-white tracking-[-0.035em] leading-[1.15] sm:leading-[1.12]">
               Le logiciel devis facture artisan{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-200 to-slate-200 block sm:inline">
                 qui comprend votre métier
@@ -235,10 +235,8 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
               <span className="text-[11px] text-slate-300 font-heading font-semibold">9,50 € / mois</span>
             </div>
 
-            {/* ============================================================== */}
-            {/* The 3D Asymmetric Device Frame with Isometric Rotation */}
-            {/* ============================================================== */}
-            <div className="relative w-full max-w-[310px] xs:max-w-[340px] sm:max-w-[370px] transform transition-transform duration-500 hover:rotate-0 rotate-y-[-4deg] rotate-x-[3deg] preserve-3d">
+            {/* The 3D Asymmetric Device Frame with Isometric Rotation on desktop, pristine crisp on mobile */}
+            <div className="relative w-full max-w-[310px] xs:max-w-[340px] sm:max-w-[370px] transform transition-transform duration-500 hover:rotate-0 sm:rotate-y-[-4deg] sm:rotate-x-[3deg] sm:preserve-3d">
               
               {/* Backlight halo glow */}
               <div className="absolute -inset-4 bg-gradient-to-tr from-blue-600/30 via-slate-600/20 to-blue-400/20 rounded-[52px] blur-2xl -z-10 opacity-80" />

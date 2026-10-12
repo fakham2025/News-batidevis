@@ -205,25 +205,27 @@ export function Navbar({ onOpenDemo }: NavbarProps) {
         )}
       </header>
 
-      {/* 2026 MOBILE STICKY BOTTOM CONVERSION BAR */}
+      {/* 2026 MOBILE STICKY BOTTOM CONVERSION BAR with iOS safe area */}
       <div 
-        className={`fixed bottom-0 left-0 right-0 z-50 md:hidden bg-slate-950/95 backdrop-blur-md border-t border-slate-800 p-3 shadow-2xl transition-all duration-300 ${
+        className={`fixed bottom-0 left-0 right-0 z-50 md:hidden bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-3.5 pt-2.5 pb-[max(0.65rem,env(safe-area-inset-bottom))] shadow-2xl transition-all duration-300 ${
           showMobileBottomBar ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
         }`}
       >
         <div className="flex items-center justify-between gap-3">
           <div className="text-left min-w-0">
-            <div className="font-heading font-bold text-white text-xs truncate">
-              Tarif VIP : <span className="text-blue-400 font-mono">9,50 € / mois</span>
+            <div className="font-heading font-bold text-white text-xs truncate flex items-center gap-1.5">
+              <span>Tarif VIP :</span>
+              <span className="text-blue-400 font-mono font-bold">9,50 € / mois</span>
             </div>
-            <div className="text-[10px] text-slate-400 font-sans truncate">
-              -50% à vie • 53 places restantes
+            <div className="text-[10px] text-slate-400 font-sans truncate flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+              <span>-50% à vie • 52 places restantes</span>
             </div>
           </div>
 
           <button
             onClick={() => scrollToSection('waitlist')}
-            className="shrink-0 px-4 py-2.5 rounded-xl bg-blue-600 active:bg-blue-700 text-white font-heading font-bold text-xs shadow-md shadow-blue-600/30 flex items-center gap-1.5 cursor-pointer"
+            className="shrink-0 px-4 py-2.5 rounded-xl bg-blue-600 active:bg-blue-700 text-white font-heading font-bold text-xs shadow-md shadow-blue-600/30 flex items-center gap-1.5 cursor-pointer min-h-[42px]"
           >
             <span>Bloquer ma place</span>
             <ArrowRight className="w-3.5 h-3.5" />

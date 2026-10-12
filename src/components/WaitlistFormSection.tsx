@@ -239,11 +239,37 @@ export function WaitlistFormSection({ token }: WaitlistFormSectionProps) {
                   )}
                 </div>
 
-                {/* Métier dropdown */}
+                {/* Métier selector */}
                 <div>
-                  <label htmlFor="trade" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 font-sans">
-                    Votre Métier principal <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label htmlFor="trade" className="block text-xs font-bold text-slate-700 uppercase tracking-wider font-sans">
+                      Votre Métier principal <span className="text-red-500">*</span>
+                    </label>
+                    <span className="text-[10px] text-blue-600 font-medium">1 clic pour choisir</span>
+                  </div>
+
+                  {/* 1-Tap Quick Chips on Mobile & Desktop */}
+                  <div className="flex flex-wrap gap-1.5 mb-2.5">
+                    {["Plombier", "Électricien", "Menuisier", "Maçon", "Peintre"].map((quickTrade) => (
+                      <button
+                        key={quickTrade}
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, trade: quickTrade });
+                          if (errors.trade) setErrors({ ...errors, trade: undefined });
+                        }}
+                        className={`text-xs py-1.5 px-2.5 sm:px-3 rounded-lg border font-medium transition-all cursor-pointer min-h-[34px] flex items-center gap-1 ${
+                          formData.trade === quickTrade
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:bg-blue-50/50'
+                        }`}
+                      >
+                        {formData.trade === quickTrade && <Check className="w-3 h-3 text-white" />}
+                        <span>{quickTrade}</span>
+                      </button>
+                    ))}
+                  </div>
+
                   <div className="relative">
                     <select
                       id="trade"
@@ -253,13 +279,13 @@ export function WaitlistFormSection({ token }: WaitlistFormSectionProps) {
                         setFormData({ ...formData, trade: e.target.value });
                         if (errors.trade) setErrors({ ...errors, trade: undefined });
                       }}
-                      className={`w-full px-4 py-3.5 sm:py-3 rounded-xl border text-base sm:text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 appearance-none transition-all font-sans ${
+                      className={`w-full px-4 py-3.5 sm:py-3 rounded-xl border text-base sm:text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 appearance-none transition-all font-sans min-h-[48px] ${
                         errors.trade
                           ? 'border-red-300 focus:border-red-500 focus:ring-red-200 bg-red-50/20'
                           : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100'
                       }`}
                     >
-                      <option value="">Sélectionnez votre métier...</option>
+                      <option value="">Ou sélectionnez un autre métier...</option>
                       {trades.map((t, idx) => (
                         <option key={idx} value={t}>
                           {t}
@@ -289,7 +315,7 @@ export function WaitlistFormSection({ token }: WaitlistFormSectionProps) {
                     placeholder="Ex : Trop long le soir, peur des mentions obligatoires, calcul de la TVA rénovation 10%..."
                     value={formData.problem}
                     onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none bg-white transition-all"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none bg-white transition-all"
                   />
                 </div>
 
@@ -299,7 +325,7 @@ export function WaitlistFormSection({ token }: WaitlistFormSectionProps) {
                   disabled={isLoading}
                   variant="default"
                   size="lg"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold shadow-lg shadow-blue-600/20 cursor-pointer pt-3.5 pb-3.5"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold shadow-lg shadow-blue-600/20 cursor-pointer pt-3.5 pb-3.5 min-h-[52px]"
                 >
                   {isLoading ? (
                     <span className="flex items-center gap-2">
@@ -315,9 +341,18 @@ export function WaitlistFormSection({ token }: WaitlistFormSectionProps) {
                 </Button>
 
                 {/* Micro-copy & Trust */}
-                <div className="pt-2 text-center text-xs text-gray-500 flex items-center justify-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-gray-400" />
-                  <span>🔒 Vos données sont protégées. Pas de spam, promis.</span>
+                <div className="pt-2 text-center text-xs text-gray-500 space-y-1.5 font-sans">
+                  <div className="flex items-center justify-center gap-3 text-[11px] text-slate-500 flex-wrap">
+                    <span className="flex items-center gap-1">
+                      <Lock className="w-3 h-3 text-slate-400" /> Sans engagement
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-blue-600 font-semibold">
+                      9,50 €/mois bloqué à vie
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <span>🇫🇷 Données en France</span>
+                  </div>
                 </div>
               </form>
             ) : (

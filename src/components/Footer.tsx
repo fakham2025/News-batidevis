@@ -8,7 +8,7 @@ interface FooterProps {
 
 export function Footer({ onOpenLegal, onOpenAdmin }: FooterProps) {
   return (
-    <footer className="bg-gray-950 text-gray-400 py-12 sm:py-16 border-t border-gray-900">
+    <footer className="bg-gray-950 text-gray-400 pt-12 pb-24 sm:py-16 border-t border-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main Footer Row */}

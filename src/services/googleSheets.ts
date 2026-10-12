@@ -34,8 +34,20 @@ WORKSPACE_SCOPES.forEach((scope) => provider.addScope(scope));
 export const DEFAULT_SPREADSHEET_ID = '1Juzs7I9JOi1ECSNvvtkFfWo1TjOZ_3JD';
 export const DEFAULT_SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${DEFAULT_SPREADSHEET_ID}/edit`;
 
-// In-memory token cache
-let cachedAccessToken: string | null = null;
+const STORAGE_KEY_TOKEN = 'batidevis_google_access_token';
+const STORAGE_KEY_SPREADSHEET_ID = 'batidevis_admin_spreadsheet_id';
+const STORAGE_KEY_SPREADSHEET_URL = 'batidevis_admin_spreadsheet_url';
+const STORAGE_KEY_WEBHOOK_URL = 'batidevis_admin_sheets_webhook';
+const STORAGE_KEY_LEADS = 'batidevis_leads_db';
+
+// In-memory token cache (hydrated from storage if present)
+let cachedAccessToken: string | null = (() => {
+  try {
+    return sessionStorage.getItem(STORAGE_KEY_TOKEN) || localStorage.getItem(STORAGE_KEY_TOKEN) || null;
+  } catch {
+    return null;
+  }
+})();
 let isSigningIn = false;
 
 export interface WaitlistRecord {
@@ -62,11 +74,6 @@ export interface DevisRecord {
   status: string;
 }
 
-const STORAGE_KEY_SPREADSHEET_ID = 'batidevis_admin_spreadsheet_id';
-const STORAGE_KEY_SPREADSHEET_URL = 'batidevis_admin_spreadsheet_url';
-const STORAGE_KEY_WEBHOOK_URL = 'batidevis_admin_sheets_webhook';
-const STORAGE_KEY_LEADS = 'batidevis_leads_db';
-
 /**
  * Local Leads Storage for offline & 100% capture resilience
  */
@@ -82,6 +89,9 @@ export const getLocalLeads = (): WaitlistRecord[] => {
 export const saveLocalLead = (lead: WaitlistRecord): WaitlistRecord[] => {
   try {
     const existing = getLocalLeads();
+    const isDuplicate = existing.some(l => l.email === lead.email && l.date === lead.date);
+    if (isDuplicate) return existing;
+
     const updated = [{ ...lead, id: lead.id || `lead_${Date.now()}` }, ...existing];
     localStorage.setItem(STORAGE_KEY_LEADS, JSON.stringify(updated));
     return updated;
@@ -120,21 +130,25 @@ export const saveWebhookConfig = (webhookUrl: string) => {
 };
 
 /**
- * Initialize auth listener
+ * Initialize auth listener with persistent token recovery
  */
 export const initAuth = (
   onAuthSuccess?: (user: User, token: string | null) => void,
   onAuthFailure?: () => void
 ) => {
+  const storedToken = sessionStorage.getItem(STORAGE_KEY_TOKEN) || localStorage.getItem(STORAGE_KEY_TOKEN);
+  if (storedToken) cachedAccessToken = storedToken;
+
   return onAuthStateChanged(auth, async (user: User | null) => {
     if (user) {
-      if (cachedAccessToken) {
-        if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken);
-      } else if (!isSigningIn) {
-        if (onAuthSuccess) onAuthSuccess(user, null);
-      }
+      const activeToken = cachedAccessToken || sessionStorage.getItem(STORAGE_KEY_TOKEN) || localStorage.getItem(STORAGE_KEY_TOKEN);
+      if (onAuthSuccess) onAuthSuccess(user, activeToken || null);
     } else {
       cachedAccessToken = null;
+      try {
+        sessionStorage.removeItem(STORAGE_KEY_TOKEN);
+        localStorage.removeItem(STORAGE_KEY_TOKEN);
+      } catch {}
       if (onAuthFailure) onAuthFailure();
     }
   });
@@ -152,6 +166,10 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
       throw new Error("Impossible d'obtenir le jeton d'accès Google.");
     }
     cachedAccessToken = credential.accessToken;
+    try {
+      sessionStorage.setItem(STORAGE_KEY_TOKEN, credential.accessToken);
+      localStorage.setItem(STORAGE_KEY_TOKEN, credential.accessToken);
+    } catch {}
     return { user: result.user, accessToken: cachedAccessToken };
   } catch (error: any) {
     console.error('Erreur de connexion Google:', error);
@@ -167,13 +185,25 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
 export const googleSignOut = async () => {
   await signOut(auth);
   cachedAccessToken = null;
+  try {
+    sessionStorage.removeItem(STORAGE_KEY_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_TOKEN);
+  } catch {}
 };
 
 /**
- * Get cached access token
+ * Get cached access token with persistent fallback
  */
 export const getAccessToken = async (): Promise<string | null> => {
-  return cachedAccessToken;
+  if (cachedAccessToken) return cachedAccessToken;
+  try {
+    const stored = sessionStorage.getItem(STORAGE_KEY_TOKEN) || localStorage.getItem(STORAGE_KEY_TOKEN);
+    if (stored) {
+      cachedAccessToken = stored;
+      return stored;
+    }
+  } catch {}
+  return null;
 };
 
 /**
@@ -388,9 +418,55 @@ export const appendWaitlistToSheet = async (
       } else if (existingTitles.length > 0) {
         tabName = existingTitles[0];
       }
+    } else if (metaRes.status === 401) {
+      // Token expired
+      cachedAccessToken = null;
+      try {
+        sessionStorage.removeItem(STORAGE_KEY_TOKEN);
+        localStorage.removeItem(STORAGE_KEY_TOKEN);
+      } catch {}
+      throw new Error("Jeton de connexion Google expiré. Veuillez vous reconnecter dans l'espace Admin.");
+    }
+  } catch (err: any) {
+    if (err.message?.includes('expiré')) throw err;
+  }
+
+  // Ensure header row exists if sheet is empty
+  try {
+    const headerCheckRes = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName)}!A1:G1`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (headerCheckRes.ok) {
+      const headerData = await headerCheckRes.json();
+      if (!headerData.values || headerData.values.length === 0) {
+        await fetch(
+          `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName)}!A1:G1?valueInputOption=USER_ENTERED`,
+          {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              range: `${tabName}!A1:G1`,
+              majorDimension: 'ROWS',
+              values: [[
+                'Date Inscription',
+                'Prénom Artisan',
+                'Email Professionnel',
+                'Corps de Métier',
+                'Problème Devis Exprimé',
+                'Code VIP Appliqué',
+                'Statut Inscription'
+              ]]
+            })
+          }
+        );
+      }
     }
   } catch {
-    // fallback
+    // ignore
   }
 
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName)}!A:G:append?valueInputOption=USER_ENTERED`;
@@ -419,6 +495,14 @@ export const appendWaitlistToSheet = async (
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      cachedAccessToken = null;
+      try {
+        sessionStorage.removeItem(STORAGE_KEY_TOKEN);
+        localStorage.removeItem(STORAGE_KEY_TOKEN);
+      } catch {}
+      throw new Error("Session Google expirée. Veuillez vous reconnecter dans l'espace Admin.");
+    }
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error?.message || "Échec de l'enregistrement dans Google Sheets.");
   }
@@ -446,16 +530,19 @@ export const dispatchLeadToBackend = async (record: WaitlistRecord, token?: stri
         body: JSON.stringify(record)
       });
       markLeadAsSynced(record.email);
+      console.log('✅ Lead envoyé avec succès au Webhook Google Apps Script');
     } catch (e) {
       console.warn('Webhook dispatch notice:', e);
     }
   }
 
-  // 3. If OAuth token and spreadsheetId available, sync via Google Sheets API
+  // 3. If OAuth token available (passed in, cached in memory, or in storage)
   const activeId = config.id || DEFAULT_SPREADSHEET_ID;
-  if (token && activeId) {
+  const effectiveToken = token || cachedAccessToken || (await getAccessToken());
+  if (effectiveToken && activeId) {
     try {
-      await appendWaitlistToSheet(token, activeId, record);
+      await appendWaitlistToSheet(effectiveToken, activeId, record);
+      console.log('✅ Inscription synchronisée avec succès dans Google Sheet via API OAuth');
     } catch (e) {
       console.warn('OAuth sync notice:', e);
     }

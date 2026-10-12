@@ -101,21 +101,10 @@ export function WaitlistFormSection({ token }: WaitlistFormSectionProps) {
     };
 
     // Silently dispatch lead to backend Google Sheets & local database
-    await dispatchLeadToBackend(record, token);
-
-    // Secondary backup webhook notification
     try {
-      await fetch('https://hooks.zapier.com/hooks/catch/123456/abcdef/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        mode: 'no-cors',
-        body: JSON.stringify({
-          ...record,
-          source: 'Landing Page SaaS Artisan 2026'
-        })
-      });
-    } catch {
-      // ignore
+      await dispatchLeadToBackend(record, token);
+    } catch (err) {
+      console.warn('Dispatch lead notice:', err);
     }
 
     setTimeout(() => {

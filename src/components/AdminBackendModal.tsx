@@ -21,7 +21,8 @@ import {
   Eye,
   EyeOff,
   LogOut,
-  ShieldAlert
+  ShieldAlert,
+  Clock
 } from 'lucide-react';
 import { 
   googleSignIn, 
@@ -34,6 +35,7 @@ import {
   saveSpreadsheetConfig, 
   saveWebhookConfig, 
   testWebhookEndpoint, 
+  getAccessToken,
   DEFAULT_SPREADSHEET_ID, 
   DEFAULT_SPREADSHEET_URL, 
   WaitlistRecord 
@@ -242,8 +244,29 @@ export function AdminBackendModal({
   };
 
   const handleSyncToSheets = async () => {
-    if (!token || !currentSheetId) {
-      setMsgError("Connectez votre compte Google ci-dessous pour lancer la synchronisation API directe.");
+    let activeToken = token;
+    if (!activeToken) {
+      activeToken = await getAccessToken();
+    }
+    
+    // If still no token, prompt Google Sign-in transparently
+    if (!activeToken) {
+      try {
+        setIsLoading(true);
+        const res = await googleSignIn();
+        onAuthChange(res.user, res.accessToken);
+        activeToken = res.accessToken;
+      } catch (err: any) {
+        setMsgError(err.message || "Connexion Google requise pour envoyer les données au classeur.");
+        setIsLoading(false);
+        return;
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (!activeToken || !currentSheetId) {
+      setMsgError("Impossible d'obtenir l'autorisation Google.");
       return;
     }
 
@@ -253,12 +276,16 @@ export function AdminBackendModal({
       let count = 0;
       for (const lead of leads) {
         if (!lead.syncedToSheets) {
-          await appendWaitlistToSheet(token, currentSheetId, lead);
+          await appendWaitlistToSheet(activeToken, currentSheetId, lead);
           count++;
         }
       }
       setLeads(getLocalLeads());
-      setMsgSuccess(`${count} inscription(s) synchronisée(s) vers votre Google Sheet.`);
+      if (count > 0) {
+        setMsgSuccess(`${count} inscription(s) synchronisée(s) avec succès vers votre Google Sheet !`);
+      } else {
+        setMsgSuccess("Toutes vos inscriptions sont déjà à jour dans votre Google Sheet !");
+      }
       setTimeout(() => setMsgSuccess(null), 4000);
     } catch (err: any) {
       setMsgError(err.message || "Erreur de synchronisation.");
@@ -319,8 +346,14 @@ export function AdminBackendModal({
 // ============================================================================
 function doPost(e) {
   try {
-    var ss = SpreadsheetApp.openById("${currentSheetId}");
-    var sheet = ss.getSheetByName("Inscriptions") || ss.getActiveSheet();
+    var ss;
+    try {
+      ss = SpreadsheetApp.getActiveSpreadsheet();
+    } catch(err) {}
+    if (!ss) {
+      ss = SpreadsheetApp.openById("${currentSheetId}");
+    }
+    var sheet = ss.getSheetByName("Inscriptions") || ss.getSheets()[0];
     
     // Si la feuille est vide, créer la ligne d'en-tête
     if (sheet.getLastRow() === 0) {
@@ -585,6 +618,9 @@ function doGet(e) {
               >
                 <Users className="w-4 h-4" />
                 <span>Inscriptions Reçues ({leads.length})</span>
+                {leads.some(l => !l.syncedToSheets) && (
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('webhook')}
@@ -614,6 +650,31 @@ function doGet(e) {
             <div className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-6">
               {activeTab === 'leads' && (
                 <div className="space-y-4">
+                  {/* Unsynced Banner */}
+                  {leads.some(l => !l.syncedToSheets) && (
+                    <div className="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
+                      <div className="flex items-start sm:items-center gap-2.5">
+                        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 sm:mt-0" />
+                        <div>
+                          <strong className="text-amber-950">
+                            {leads.filter(l => !l.syncedToSheets).length} inscription(s) en attente de transfert
+                          </strong>
+                          <p className="text-[11px] text-amber-800">
+                            Ces contacts sont bien enregistrés en sécurité dans l'application et n'attendent que d'être transférés vers votre Google Sheet.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleSyncToSheets}
+                        disabled={isSyncing || isLoading}
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-bold rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                        <span>{isSyncing ? 'Envoi...' : 'Envoyer vers mon Google Sheet'}</span>
+                      </button>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <p className="text-xs text-slate-600 font-sans">
                       Toutes les inscriptions soumises par les artisans sur la landing page :
@@ -625,16 +686,15 @@ function doGet(e) {
                       >
                         + Ajouter un lead test
                       </button>
-                      {token && currentSheetId && (
-                        <button
-                          onClick={handleSyncToSheets}
-                          disabled={isSyncing}
-                          className="px-3 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center gap-1 cursor-pointer"
-                        >
-                          <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
-                          <span>Synchroniser vers Google Sheet</span>
-                        </button>
-                      )}
+                      <button
+                        onClick={handleSyncToSheets}
+                        disabled={isSyncing || isLoading}
+                        className="px-3 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center gap-1.5 cursor-pointer"
+                        title="Synchroniser toutes les inscriptions vers Google Sheet"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                        <span>{isSyncing ? 'Synchronisation...' : 'Synchroniser vers Google Sheet'}</span>
+                      </button>
                     </div>
                   </div>
 
@@ -648,8 +708,8 @@ function doGet(e) {
                             <th className="py-3 px-4">Email Professionnel</th>
                             <th className="py-3 px-4">Corps de Métier</th>
                             <th className="py-3 px-4">Problème Devis</th>
-                            <th className="py-3 px-4">Code VIP</th>
-                            <th className="py-3 px-4">Statut</th>
+                            <th className="py-3 px-4">Statut Google Sheet</th>
+                            <th className="py-3 px-4">Statut Offre</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 font-sans">
@@ -677,9 +737,21 @@ function doGet(e) {
                                 <td className="py-3 px-4 text-slate-600 max-w-xs truncate" title={lead.problem}>
                                   {lead.problem}
                                 </td>
-                                <td className="py-3 px-4 font-mono font-bold text-blue-600">{lead.vipCode}</td>
                                 <td className="py-3 px-4">
-                                  <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                  {lead.syncedToSheets ? (
+                                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                      Dans Google Sheet
+                                    </span>
+                                  ) : (
+                                    <span className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                      <Clock className="w-3 h-3 text-amber-600" />
+                                      En attente d'envoi
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
                                     {lead.status}
                                   </span>
                                 </td>

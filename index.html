@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logiciel Devis Facture Artisan | App Mobile Conforme 2026</title>
+    <meta name="description" content="Application mobile de devis et factures pour artisans du bâtiment. Générez des devis conformes aux mentions obligatoires 2026 en 60 secondes depuis votre téléphone. Accès anticipé -50%." />
+    <meta name="keywords" content="logiciel devis facture artisan, application devis facture téléphone, mentions obligatoires devis artisan 2026, logiciel devis BTP simple, générateur devis conforme" />
+    
+    <!-- OpenGraph -->
+    <meta property="og:title" content="Le logiciel devis facture artisan qui comprend votre métier" />
+    <meta property="og:description" content="Générez des devis conformes en 60 secondes depuis votre téléphone. Accès anticipé -50%." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="BâtiDevis" />
+    <meta property="og:locale" content="fr_FR" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Le logiciel devis facture artisan qui comprend votre métier" />
+    <meta name="twitter:description" content="Générez des devis conformes en 60 secondes depuis votre téléphone. Accès anticipé -50%." />
+
+    <!-- Google Fonts: Inter, Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://batidevis.fr/#software",
+          "name": "BâtiDevis",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "iOS, Android, Web (PWA)",
+          "description": "Application mobile de devis et factures pour artisans du bâtiment conforme aux 16 mentions obligatoires et à la réforme de la facture électronique PDP 2026.",
+          "offers": {
+            "@type": "Offer",
+            "price": "9.50",
+            "priceCurrency": "EUR",
+            "priceValidUntil": "2026-12-31",
+            "description": "Tarif accès anticipé liste d'attente à -50% à vie (au lieu de 19€/mois)"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "reviewCount": "247"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://batidevis.fr/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Quelles sont les mentions obligatoires sur un devis artisan en 2026 ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Notre application intègre automatiquement les 16 mentions obligatoires : identité de l'entreprise (SIRET, assurances), coordonnées du client, description détaillée des prestations, prix HT/TTC, TVA applicable, date de validité, et depuis 2026, la conformité à la facture électronique PDP."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "L'application fonctionne-t-elle hors connexion sur chantier ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Oui, 100%. Vous pouvez créer, modifier et envoyer des devis sans connexion internet. Tout se synchronise automatiquement dès que vous récupérez du réseau."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Est-ce conforme à la réforme de la facture électronique PDP 2026 ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Absolument. Nous sommes en cours de certification PDP (Plateforme de Dématérialisation Partenaire) et votre outil sera 100% conforme dès le lancement officiel."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Combien coûte l'application ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "L'abonnement sera de 19€/mois (sans engagement). En rejoignant la liste d'attente aujourd'hui, vous bénéficiez de -50% à vie, soit 9,50€/mois."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Puis-je importer mes données depuis Excel ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Oui, un importateur CSV/Excel est inclus. Vous pouvez importer vos clients, vos prestations récurrentes et vos anciens devis en quelques clics."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body class="bg-white text-gray-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

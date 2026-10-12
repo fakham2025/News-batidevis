@@ -1,0 +1,6 @@
+{
+  "name": "BâtiDevis 2026 - Logiciel Devis Facture Artisan",
+  "description": "Application mobile de devis et factures pour artisans du bâtiment conforme aux mentions obligatoires et à la réforme PDP 2026.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

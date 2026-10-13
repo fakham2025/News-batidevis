@@ -512,7 +512,7 @@ export const appendWaitlistToSheet = async (
 };
 
 /**
- * Send lead to backend (Local store + Webhook + OAuth if active)
+ * Send lead to backend (Local store + Webhook + OAuth if active) in real-time
  */
 export const dispatchLeadToBackend = async (
   record: WaitlistRecord,
@@ -525,64 +525,98 @@ export const dispatchLeadToBackend = async (
   let webhookSent = false;
   let oauthSent = false;
 
-  // 2. If webhook URL configured (Google Apps Script Web App)
-  if (config.webhookUrl) {
-    try {
-      // Build normalized payload supporting all field naming variations:
-      // - name / firstName / fullName
-      // - problem / biggestChallenge / challenge
-      // - vipCode / vipDiscountCode
-      // - date / timestamp
-      const webhookPayload = {
-        id: record.id || `lead_${Date.now()}`,
-        // Primary and alias keys for Name
-        firstName: record.firstName,
-        name: record.firstName,
-        fullName: record.firstName,
-        // Email
-        email: record.email,
-        // Trade / Profession
-        trade: record.trade,
-        // Primary and alias keys for Problem / Challenge
-        problem: record.problem || 'Non précisé',
-        biggestChallenge: record.problem || 'Non précisé',
-        challenge: record.problem || 'Non précisé',
-        // Primary and alias keys for VIP Code
-        vipCode: record.vipCode || 'ARTISAN50',
-        vipDiscountCode: record.vipCode || 'ARTISAN50',
-        // Primary and alias keys for Date / Timestamp
-        date: record.date || new Date().toLocaleString('fr-FR'),
-        timestamp: new Date().toISOString(),
-        // Status
-        status: record.status || 'Inscrit VIP (-50%)'
-      };
+  // Build normalized payload supporting all field naming variations:
+  // - name / firstName / fullName
+  // - problem / biggestChallenge / challenge
+  // - vipCode / vipDiscountCode
+  // - date / timestamp
+  const webhookPayload = {
+    id: record.id || `lead_${Date.now()}`,
+    firstName: record.firstName,
+    name: record.firstName,
+    fullName: record.firstName,
+    email: record.email,
+    mail: record.email,
+    trade: record.trade,
+    metier: record.trade,
+    profession: record.trade,
+    problem: record.problem || 'Non précisé',
+    biggestChallenge: record.problem || 'Non précisé',
+    challenge: record.problem || 'Non précisé',
+    vipCode: record.vipCode || 'ARTISAN50',
+    vipDiscountCode: record.vipCode || 'ARTISAN50',
+    date: record.date || new Date().toLocaleString('fr-FR'),
+    timestamp: new Date().toISOString(),
+    status: record.status || 'Inscrit VIP (-50%)'
+  };
 
-      await fetch(config.webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        mode: 'no-cors',
-        body: JSON.stringify(webhookPayload)
-      });
-      markLeadAsSynced(record.email);
-      webhookSent = true;
-      console.log('✅ Lead envoyé avec succès au Webhook Google Apps Script');
-    } catch (e) {
-      console.warn('Webhook dispatch notice:', e);
-    }
+  const tasks: Promise<any>[] = [];
+
+  // 2. Dispatch to Google Apps Script Webhook immediately
+  const webhookUrlToUse = config.webhookUrl || DEFAULT_WEBHOOK_URL;
+  if (webhookUrlToUse) {
+    const webhookPromise = (async () => {
+      try {
+        let targetUrl: URL;
+        try {
+          targetUrl = new URL(webhookUrlToUse);
+        } catch {
+          targetUrl = new URL(webhookUrlToUse, window.location.origin);
+        }
+
+        // Attach query parameters as well so Apps Scripts relying on e.parameter (GET or POST) receive all columns
+        targetUrl.searchParams.set('name', record.firstName);
+        targetUrl.searchParams.set('firstName', record.firstName);
+        targetUrl.searchParams.set('email', record.email);
+        targetUrl.searchParams.set('mail', record.email);
+        targetUrl.searchParams.set('trade', record.trade);
+        targetUrl.searchParams.set('metier', record.trade);
+        targetUrl.searchParams.set('problem', record.problem || 'Non précisé');
+        targetUrl.searchParams.set('biggestChallenge', record.problem || 'Non précisé');
+        targetUrl.searchParams.set('vipCode', record.vipCode || 'ARTISAN50');
+        targetUrl.searchParams.set('vipDiscountCode', record.vipCode || 'ARTISAN50');
+        targetUrl.searchParams.set('date', record.date || new Date().toLocaleString('fr-FR'));
+        targetUrl.searchParams.set('timestamp', new Date().toISOString());
+        targetUrl.searchParams.set('status', record.status || 'Inscrit VIP (-50%)');
+
+        await fetch(targetUrl.toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          mode: 'no-cors',
+          body: JSON.stringify(webhookPayload),
+          keepalive: true
+        });
+
+        markLeadAsSynced(record.email);
+        webhookSent = true;
+        console.log('✅ Lead envoyé avec succès au Webhook Google Apps Script en temps réel');
+      } catch (e) {
+        console.warn('Webhook dispatch notice:', e);
+      }
+    })();
+    tasks.push(webhookPromise);
   }
 
-  // 3. If OAuth token available (passed in, cached in memory, or in storage)
+  // 3. Dispatch via Google Sheets OAuth API in parallel if active
   const activeId = config.id || DEFAULT_SPREADSHEET_ID;
-  const effectiveToken = token || cachedAccessToken || (await getAccessToken());
+  const effectiveToken = token || cachedAccessToken;
   if (effectiveToken && activeId) {
-    try {
-      await appendWaitlistToSheet(effectiveToken, activeId, record);
-      oauthSent = true;
-      markLeadAsSynced(record.email);
-      console.log('✅ Inscription synchronisée avec succès dans Google Sheet via API OAuth');
-    } catch (e) {
-      console.warn('OAuth sync notice:', e);
-    }
+    const oauthPromise = (async () => {
+      try {
+        await appendWaitlistToSheet(effectiveToken, activeId, record);
+        oauthSent = true;
+        markLeadAsSynced(record.email);
+        console.log('✅ Inscription synchronisée avec succès dans Google Sheet via API OAuth');
+      } catch (e) {
+        console.warn('OAuth sync notice:', e);
+      }
+    })();
+    tasks.push(oauthPromise);
+  }
+
+  // Await all background tasks in parallel without chain-blocking
+  if (tasks.length > 0) {
+    await Promise.allSettled(tasks);
   }
 
   return { success: webhookSent || oauthSent, webhookSent, oauthSent };
@@ -612,7 +646,9 @@ export const testWebhookEndpoint = async (
     firstName: customRecord?.firstName || customRecord?.name || 'Jean Dupont (Test Automatique)',
     name: customRecord?.name || customRecord?.firstName || 'Jean Dupont (Test Automatique)',
     email: customRecord?.email || `jean.dupont.test${Math.floor(Math.random() * 900)}@batidevis.fr`,
+    mail: customRecord?.email || `jean.dupont.test${Math.floor(Math.random() * 900)}@batidevis.fr`,
     trade: customRecord?.trade || 'Électricien',
+    metier: customRecord?.trade || 'Électricien',
     problem: customRecord?.problem || customRecord?.biggestChallenge || 'Test de synchronisation Webhook Google Apps Script',
     biggestChallenge: customRecord?.biggestChallenge || customRecord?.problem || 'Test de synchronisation Webhook Google Apps Script',
     vipCode: customRecord?.vipCode || customRecord?.vipDiscountCode || 'ARTISAN50',
@@ -633,11 +669,33 @@ export const testWebhookEndpoint = async (
   });
 
   try {
-    await fetch(webhookUrl, {
+    let targetUrl: URL;
+    try {
+      targetUrl = new URL(webhookUrl);
+    } catch {
+      targetUrl = new URL(webhookUrl, window.location.origin);
+    }
+
+    targetUrl.searchParams.set('name', testPayload.name);
+    targetUrl.searchParams.set('firstName', testPayload.firstName);
+    targetUrl.searchParams.set('email', testPayload.email);
+    targetUrl.searchParams.set('mail', testPayload.email);
+    targetUrl.searchParams.set('trade', testPayload.trade);
+    targetUrl.searchParams.set('metier', testPayload.trade);
+    targetUrl.searchParams.set('problem', testPayload.problem);
+    targetUrl.searchParams.set('biggestChallenge', testPayload.biggestChallenge);
+    targetUrl.searchParams.set('vipCode', testPayload.vipCode);
+    targetUrl.searchParams.set('vipDiscountCode', testPayload.vipDiscountCode);
+    targetUrl.searchParams.set('date', testPayload.date);
+    targetUrl.searchParams.set('timestamp', testPayload.timestamp);
+    targetUrl.searchParams.set('status', testPayload.status);
+
+    await fetch(targetUrl.toString(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       mode: 'no-cors',
-      body: JSON.stringify(testPayload)
+      body: JSON.stringify(testPayload),
+      keepalive: true
     });
     markLeadAsSynced(testPayload.email);
     return true;

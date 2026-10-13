@@ -458,16 +458,24 @@ export function AdminBackendModal({
 // ============================================================================
 
 function doGet(e) {
+  // Si des données sont transmises dans l'URL (GET ou redirection 302), enregistrer le lead
+  if (e && e.parameter && (e.parameter.email || e.parameter.mail || e.parameter.name || e.parameter.firstName)) {
+    return handleLead(e);
+  }
   // Permet de tester directement l'URL dans un navigateur
   return ContentService.createTextOutput(JSON.stringify({
     status: "ok",
-    message: "Le Webhook BâtiDevis est opérationnel et prêt à recevoir les inscriptions.",
+    message: "Le Webhook BâtiDevis est opérationnel et prêt à recevoir les inscriptions en temps réel.",
     sheetId: "${currentSheetId}",
     timestamp: new Date().toISOString()
   })).setMimeType(ContentService.MimeType.JSON);
 }
 
 function doPost(e) {
+  return handleLead(e);
+}
+
+function handleLead(e) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000); // Évite les conflits si plusieurs inscriptions arrivent en même temps
@@ -479,7 +487,16 @@ function doPost(e) {
       ss = SpreadsheetApp.getActiveSpreadsheet();
     } catch(err) {}
     if (!ss) {
-      ss = SpreadsheetApp.openById("${currentSheetId}");
+      try {
+        var targetId = (e && e.parameter && (e.parameter.sheetId || e.parameter.spreadsheetId)) || "${currentSheetId}";
+        if (targetId) {
+          ss = SpreadsheetApp.openById(targetId);
+        }
+      } catch(openErr) {}
+    }
+    
+    if (!ss) {
+      throw new Error("Impossible d'accéder au classeur Google Sheet. Veillez à lier ce script via Extensions > Apps Script ou configurer l'ID de votre classeur.");
     }
     
     // Détecte l'onglet : 'Inscriptions' ou le premier onglet disponible
@@ -503,7 +520,7 @@ function doPost(e) {
       sheet.setFrozenRows(1);
     }
     
-    // 1. Parsing robuste du corps de requête (supporte application/json et text/plain)
+    // 1. Parsing robuste du corps de requête (supporte application/json, text/plain et paramètres d'URL)
     var data = {};
     if (e && e.postData && e.postData.contents) {
       try {
@@ -515,6 +532,13 @@ function doPost(e) {
       data = e.parameter;
     }
     
+    // Fusionner les paramètres URL s'ils apportent des champs supplémentaires
+    if (e && e.parameter) {
+      for (var key in e.parameter) {
+        if (!data[key]) data[key] = e.parameter[key];
+      }
+    }
+    
     // 2. Mapping tolérant de tous les alias possibles (name, biggestChallenge, vipDiscountCode, timestamp, etc.)
     var dateVal = data.date || data.timestamp || data.createdAt || new Date().toLocaleString("fr-FR");
     var nameVal = data.firstName || data.name || data.fullName || data.prenom || data.nom || "Artisan";
@@ -524,7 +548,7 @@ function doPost(e) {
     var vipVal = data.vipCode || data.vipDiscountCode || data.promoCode || data.code || "ARTISAN50";
     var statusVal = data.status || data.statut || "Inscrit VIP (-50%)";
     
-    // 3. Écriture de la nouvelle ligne dans le Google Sheet
+    // 3. Écriture immédiate de la ligne dans le Google Sheet en temps réel
     sheet.appendRow([
       dateVal,
       nameVal,
@@ -537,7 +561,7 @@ function doPost(e) {
     
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",
-      message: "Lead enregistré dans Google Sheet",
+      message: "Lead enregistré dans Google Sheet en temps réel",
       columns: {
         date: dateVal,
         name: nameVal,

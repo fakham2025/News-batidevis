@@ -10,7 +10,7 @@ import {
   Clock 
 } from 'lucide-react';
 import { Button } from './ui/Button';
-import { dispatchLeadToBackend, WaitlistRecord } from '../services/googleSheets';
+import { dispatchLeadToBackend, saveLocalLead, WaitlistRecord } from '../services/googleSheets';
 
 interface FormData {
   firstName: string;
@@ -100,13 +100,13 @@ export function WaitlistFormSection({ token }: WaitlistFormSectionProps) {
       status: 'Inscrit VIP (-50%)'
     };
 
-    // Silently dispatch lead to backend Google Sheets & local database
-    try {
-      await dispatchLeadToBackend(record, token);
-    } catch (err) {
+    // 1. Sauvegarde locale instantanée & envoi immédiat en temps réel vers Google Sheet (non-bloquant)
+    saveLocalLead(record);
+    dispatchLeadToBackend(record, token).catch((err) => {
       console.warn('Dispatch lead notice:', err);
-    }
+    });
 
+    // 2. Affichage instantané du succès & confettis (transition fluide et immédiate)
     setTimeout(() => {
       setIsLoading(false);
       setIsSuccess(true);
@@ -121,7 +121,7 @@ export function WaitlistFormSection({ token }: WaitlistFormSectionProps) {
       } catch {
         // ignore
       }
-    }, 600);
+    }, 180);
   };
 
   const handleCopyCode = () => {

@@ -30,9 +30,9 @@ export const WORKSPACE_SCOPES = [
 const provider = new GoogleAuthProvider();
 WORKSPACE_SCOPES.forEach((scope) => provider.addScope(scope));
 
-// Default User Google Sheet configured for BâtiDevis 2026
 export const DEFAULT_SPREADSHEET_ID = '1Juzs7I9JOi1ECSNvvtkFfWo1TjOZ_3JD';
 export const DEFAULT_SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${DEFAULT_SPREADSHEET_ID}/edit`;
+export const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwesenJV81E8Rlps2N1iMfTlYGjwajb6qTPmwJ6xmGVE_SLU7_nVGaT3_jbrWaLHLis/exec';
 
 const STORAGE_KEY_TOKEN = 'batidevis_google_access_token';
 const STORAGE_KEY_SPREADSHEET_ID = 'batidevis_admin_spreadsheet_id';
@@ -115,7 +115,7 @@ export const getSavedSpreadsheetConfig = () => {
   const id = storedId || DEFAULT_SPREADSHEET_ID;
   const storedUrl = localStorage.getItem(STORAGE_KEY_SPREADSHEET_URL);
   const url = storedUrl || (id ? `https://docs.google.com/spreadsheets/d/${id}/edit` : DEFAULT_SPREADSHEET_URL);
-  const webhookUrl = localStorage.getItem(STORAGE_KEY_WEBHOOK_URL) || null;
+  const webhookUrl = localStorage.getItem(STORAGE_KEY_WEBHOOK_URL) || DEFAULT_WEBHOOK_URL;
 
   return { id, url, webhookUrl };
 };
@@ -514,22 +514,57 @@ export const appendWaitlistToSheet = async (
 /**
  * Send lead to backend (Local store + Webhook + OAuth if active)
  */
-export const dispatchLeadToBackend = async (record: WaitlistRecord, token?: string | null) => {
+export const dispatchLeadToBackend = async (
+  record: WaitlistRecord,
+  token?: string | null
+): Promise<{ success: boolean; webhookSent: boolean; oauthSent: boolean }> => {
   // 1. Always save locally first so no lead is EVER lost
   saveLocalLead(record);
 
   const config = getSavedSpreadsheetConfig();
+  let webhookSent = false;
+  let oauthSent = false;
 
   // 2. If webhook URL configured (Google Apps Script Web App)
   if (config.webhookUrl) {
     try {
+      // Build normalized payload supporting all field naming variations:
+      // - name / firstName / fullName
+      // - problem / biggestChallenge / challenge
+      // - vipCode / vipDiscountCode
+      // - date / timestamp
+      const webhookPayload = {
+        id: record.id || `lead_${Date.now()}`,
+        // Primary and alias keys for Name
+        firstName: record.firstName,
+        name: record.firstName,
+        fullName: record.firstName,
+        // Email
+        email: record.email,
+        // Trade / Profession
+        trade: record.trade,
+        // Primary and alias keys for Problem / Challenge
+        problem: record.problem || 'Non précisé',
+        biggestChallenge: record.problem || 'Non précisé',
+        challenge: record.problem || 'Non précisé',
+        // Primary and alias keys for VIP Code
+        vipCode: record.vipCode || 'ARTISAN50',
+        vipDiscountCode: record.vipCode || 'ARTISAN50',
+        // Primary and alias keys for Date / Timestamp
+        date: record.date || new Date().toLocaleString('fr-FR'),
+        timestamp: new Date().toISOString(),
+        // Status
+        status: record.status || 'Inscrit VIP (-50%)'
+      };
+
       await fetch(config.webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         mode: 'no-cors',
-        body: JSON.stringify(record)
+        body: JSON.stringify(webhookPayload)
       });
       markLeadAsSynced(record.email);
+      webhookSent = true;
       console.log('✅ Lead envoyé avec succès au Webhook Google Apps Script');
     } catch (e) {
       console.warn('Webhook dispatch notice:', e);
@@ -542,30 +577,60 @@ export const dispatchLeadToBackend = async (record: WaitlistRecord, token?: stri
   if (effectiveToken && activeId) {
     try {
       await appendWaitlistToSheet(effectiveToken, activeId, record);
+      oauthSent = true;
+      markLeadAsSynced(record.email);
       console.log('✅ Inscription synchronisée avec succès dans Google Sheet via API OAuth');
     } catch (e) {
       console.warn('OAuth sync notice:', e);
     }
   }
+
+  return { success: webhookSent || oauthSent, webhookSent, oauthSent };
 };
 
 /**
- * Test Webhook connectivity
+ * Test Webhook connectivity by dispatching a realistic test artisan lead with full payload aliases
  */
-export const testWebhookEndpoint = async (webhookUrl: string): Promise<boolean> => {
+export const testWebhookEndpoint = async (
+  webhookUrl: string,
+  customRecord?: Partial<WaitlistRecord> & {
+    name?: string;
+    biggestChallenge?: string;
+    vipDiscountCode?: string;
+    timestamp?: string;
+  }
+): Promise<boolean> => {
   if (!webhookUrl || !webhookUrl.startsWith('http')) return false;
 
-  const testPayload: WaitlistRecord = {
-    date: new Date().toLocaleDateString('fr-FR', {
+  const now = new Date();
+  const testPayload = {
+    id: customRecord?.id || `test_${Date.now()}`,
+    date: customRecord?.date || now.toLocaleDateString('fr-FR', {
       day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
     }),
-    firstName: 'Test Webhook',
-    email: 'test.artisan@batidevis.fr',
-    trade: 'Électricien',
-    problem: 'Test direct de connexion Webhook',
-    vipCode: 'TESTWEBHOOK',
-    status: 'Test Actif'
+    timestamp: customRecord?.timestamp || now.toISOString(),
+    firstName: customRecord?.firstName || customRecord?.name || 'Jean Dupont (Test Automatique)',
+    name: customRecord?.name || customRecord?.firstName || 'Jean Dupont (Test Automatique)',
+    email: customRecord?.email || `jean.dupont.test${Math.floor(Math.random() * 900)}@batidevis.fr`,
+    trade: customRecord?.trade || 'Électricien',
+    problem: customRecord?.problem || customRecord?.biggestChallenge || 'Test de synchronisation Webhook Google Apps Script',
+    biggestChallenge: customRecord?.biggestChallenge || customRecord?.problem || 'Test de synchronisation Webhook Google Apps Script',
+    vipCode: customRecord?.vipCode || customRecord?.vipDiscountCode || 'ARTISAN50',
+    vipDiscountCode: customRecord?.vipDiscountCode || customRecord?.vipCode || 'ARTISAN50',
+    status: customRecord?.status || 'Inscrit VIP (-50%)'
   };
+
+  saveLocalLead({
+    id: testPayload.id,
+    date: testPayload.date,
+    firstName: testPayload.firstName,
+    email: testPayload.email,
+    trade: testPayload.trade,
+    problem: testPayload.problem,
+    vipCode: testPayload.vipCode,
+    status: testPayload.status,
+    syncedToSheets: true
+  });
 
   try {
     await fetch(webhookUrl, {
@@ -574,6 +639,7 @@ export const testWebhookEndpoint = async (webhookUrl: string): Promise<boolean> 
       mode: 'no-cors',
       body: JSON.stringify(testPayload)
     });
+    markLeadAsSynced(testPayload.email);
     return true;
   } catch (err) {
     console.error('Test Webhook failed:', err);

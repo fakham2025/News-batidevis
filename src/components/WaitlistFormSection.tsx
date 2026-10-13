@@ -342,6 +342,24 @@ export function WaitlistFormSection({ token }: WaitlistFormSectionProps) {
                     <span className="text-slate-300">•</span>
                     <span>🇫🇷 Données en France</span>
                   </div>
+                  <div className="pt-1 text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const randomId = Math.floor(Math.random() * 900) + 100;
+                        setFormData({
+                          firstName: 'Jean (Test)',
+                          email: `jean.dupont.${randomId}@gmail.com`,
+                          trade: 'Électricien',
+                          problem: 'Perte de temps sur mes devis le soir après les chantiers'
+                        });
+                        setErrors({});
+                      }}
+                      className="text-[11px] text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"
+                    >
+                      ⚡ Remplir des données fictives de test
+                    </button>
+                  </div>
                 </div>
               </form>
             ) : (

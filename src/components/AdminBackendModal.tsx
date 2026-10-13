@@ -22,7 +22,8 @@ import {
   EyeOff,
   LogOut,
   ShieldAlert,
-  Clock
+  Clock,
+  Sparkles
 } from 'lucide-react';
 import { 
   googleSignIn, 
@@ -35,9 +36,11 @@ import {
   saveSpreadsheetConfig, 
   saveWebhookConfig, 
   testWebhookEndpoint, 
+  dispatchLeadToBackend,
   getAccessToken,
   DEFAULT_SPREADSHEET_ID, 
   DEFAULT_SPREADSHEET_URL, 
+  DEFAULT_WEBHOOK_URL, 
   WaitlistRecord 
 } from '../services/googleSheets';
 import { User } from 'firebase/auth';
@@ -85,6 +88,7 @@ export function AdminBackendModal({
   const [msgSuccess, setMsgSuccess] = useState<string | null>(null);
   const [msgError, setMsgError] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedCurl, setCopiedCurl] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -317,25 +321,133 @@ export function AdminBackendModal({
     document.body.removeChild(link);
   };
 
-  const handleAddTestLead = () => {
-    const testLead: WaitlistRecord = {
-      id: `lead_${Date.now()}`,
-      date: new Date().toLocaleDateString('fr-FR', {
-        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-      }),
-      firstName: 'Artisan Test',
-      email: `artisan.test.${Math.floor(Math.random() * 900)}@batidevis.fr`,
-      trade: 'Électricien',
-      problem: 'Test direct de réception dans la base de données',
-      vipCode: 'ARTISAN50',
-      status: 'Test Admin',
-      syncedToSheets: false
-    };
+  const handleSendTestLeads = async (count: number = 1) => {
+    setIsTestingWebhook(true);
+    setMsgError(null);
+    setMsgSuccess(null);
 
-    saveLocalLead(testLead);
+    const testProfiles = [
+      {
+        firstName: 'Jean Dupont (Artisan)',
+        email: `jean.dupont.elec.${Math.floor(Math.random() * 900)}@gmail.com`,
+        trade: 'Électricien',
+        problem: 'Perte de 2h chaque soir à rédiger les devis de rénovation',
+      },
+      {
+        firstName: 'Marc Lefebvre (Artisan)',
+        email: `marc.lefebvre.plombier.${Math.floor(Math.random() * 900)}@gmail.com`,
+        trade: 'Plombier',
+        problem: 'Calcul complexe de la TVA rénovation 10% et mentions obligatoires',
+      },
+      {
+        firstName: 'Sophie Martin (Artisane)',
+        email: `sophie.martin.peinture.${Math.floor(Math.random() * 900)}@gmail.com`,
+        trade: 'Peintre en bâtiment',
+        problem: "Besoin d'envoyer un devis signé immédiatement devant le client",
+      }
+    ];
+
+    const profilesToSend = testProfiles.slice(0, count);
+    let sentCount = 0;
+    let webhookSuccess = false;
+
+    for (const p of profilesToSend) {
+      const record: WaitlistRecord = {
+        id: `lead_test_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        date: new Date().toLocaleDateString('fr-FR', {
+          day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        }),
+        firstName: p.firstName,
+        email: p.email,
+        trade: p.trade,
+        problem: p.problem,
+        vipCode: 'ARTISAN50',
+        status: 'Test Envoyé',
+        syncedToSheets: false
+      };
+
+      const res = await dispatchLeadToBackend(record, token);
+      if (res.webhookSent) webhookSuccess = true;
+      if (res.webhookSent || res.oauthSent) sentCount++;
+    }
+
     setLeads(getLocalLeads());
-    setMsgSuccess('Inscription test ajoutée à la base de données.');
-    setTimeout(() => setMsgSuccess(null), 2500);
+    setIsTestingWebhook(false);
+
+    const hasWebhookUrl = !!(customWebhookUrl && customWebhookUrl.trim());
+    if (webhookSuccess || sentCount > 0) {
+      setMsgSuccess(
+        `✅ ${count} inscription(s) test envoyée(s) directement dans votre Google Sheet ! Ouvrez votre classeur Google Sheet pour vérifier l'apparition des lignes.`
+      );
+    } else if (hasWebhookUrl) {
+      setMsgSuccess(
+        `✅ ${count} inscription(s) test envoyée(s) via Webhook ! Vérifiez votre classeur Google Sheet.`
+      );
+    } else {
+      setMsgSuccess(
+        `✅ ${count} inscription(s) fictive(s) créée(s) dans la base locale. Attention : pour qu'elle s'écrive automatiquement dans votre Google Sheet, collez l'URL de votre Webhook dans l'onglet "Activer le Webhook" !`
+      );
+    }
+    setTimeout(() => setMsgSuccess(null), 6000);
+  };
+
+  const handleTestJsonPayload = async () => {
+    const urlToUse = customWebhookUrl.trim() || DEFAULT_WEBHOOK_URL;
+    if (!urlToUse) {
+      setMsgError("Veuillez d'abord renseigner une URL de Webhook.");
+      return;
+    }
+    setIsTestingWebhook(true);
+    setMsgError(null);
+    setMsgSuccess(null);
+    try {
+      const now = new Date();
+      const randomNum = Math.floor(Math.random() * 900) + 100;
+      const ok = await testWebhookEndpoint(urlToUse, {
+        name: `Jean Dupont (Test Structure JSON #${randomNum})`,
+        firstName: `Jean Dupont (Test Structure JSON #${randomNum})`,
+        email: `jean.dupont.json${randomNum}@batidevis.fr`,
+        trade: 'Électricien',
+        biggestChallenge: 'Calcul TVA 10% rénovation et mentions obligatoires',
+        problem: 'Calcul TVA 10% rénovation et mentions obligatoires',
+        vipDiscountCode: 'ARTISAN50',
+        vipCode: 'ARTISAN50',
+        timestamp: now.toISOString(),
+        date: now.toLocaleDateString('fr-FR', {
+          day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        }),
+        status: 'Inscrit VIP (-50%)'
+      });
+      setLeads(getLocalLeads());
+      if (ok) {
+        setMsgSuccess(
+          "✅ Payload JSON standard transmis avec succès au Webhook ! Les champs 'name', 'biggestChallenge', 'vipDiscountCode', 'timestamp' ont été envoyés et cartographiés vers votre Google Sheet."
+        );
+      } else {
+        setMsgError("Échec du test de structure JSON. Vérifiez l'URL de votre Webhook et ses autorisations.");
+      }
+    } catch (err: any) {
+      setMsgError(err.message || "Erreur lors du test de structure JSON.");
+    } finally {
+      setIsTestingWebhook(false);
+      setTimeout(() => setMsgSuccess(null), 8000);
+    }
+  };
+
+  const handleCopyCurl = () => {
+    const url = customWebhookUrl.trim() || DEFAULT_WEBHOOK_URL;
+    const jsonStr = JSON.stringify({
+      name: "Jean Dupont",
+      email: "jean@exemple.fr",
+      trade: "Électricien",
+      biggestChallenge: "Facturation",
+      vipDiscountCode: "ARTISAN50",
+      timestamp: new Date().toISOString()
+    });
+    const curlCmd = `curl -X POST "${url}" -H "Content-Type: application/json" -d '${jsonStr}'`;
+    navigator.clipboard.writeText(curlCmd);
+    setCopiedCurl(true);
+    setTimeout(() => setCopiedCurl(false), 2000);
   };
 
   if (!isOpen) return null;
@@ -344,7 +456,23 @@ export function AdminBackendModal({
 // GOOGLE APPS SCRIPT POUR BÂTIDEVIS 2026
 // ID du Sheet configuré : ${currentSheetId}
 // ============================================================================
+
+function doGet(e) {
+  // Permet de tester directement l'URL dans un navigateur
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "ok",
+    message: "Le Webhook BâtiDevis est opérationnel et prêt à recevoir les inscriptions.",
+    sheetId: "${currentSheetId}",
+    timestamp: new Date().toISOString()
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
 function doPost(e) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000); // Évite les conflits si plusieurs inscriptions arrivent en même temps
+  } catch (err) {}
+
   try {
     var ss;
     try {
@@ -353,55 +481,86 @@ function doPost(e) {
     if (!ss) {
       ss = SpreadsheetApp.openById("${currentSheetId}");
     }
-    var sheet = ss.getSheetByName("Inscriptions") || ss.getSheets()[0];
     
-    // Si la feuille est vide, créer la ligne d'en-tête
+    // Détecte l'onglet : 'Inscriptions' ou le premier onglet disponible
+    var sheet = ss.getSheetByName("Inscriptions") || ss.getSheetByName("Feuille 1") || ss.getSheetByName("Sheet1") || ss.getSheets()[0];
+    
+    // Si la feuille est neuve / vide, créer la ligne d'en-tête stylisée
     if (sheet.getLastRow() === 0) {
       sheet.appendRow([
         "Date Inscription",
-        "Prénom Artisan",
+        "Prénom & Nom Artisan",
         "Email Professionnel",
         "Corps de Métier",
         "Problème Devis Exprimé",
         "Code VIP Appliqué",
-        "Statut"
+        "Statut Inscription"
       ]);
-      sheet.getRange(1, 1, 1, 7).setFontWeight("bold").setBackground("#f1f5f9");
+      sheet.getRange(1, 1, 1, 7)
+        .setFontWeight("bold")
+        .setBackground("#1e293b")
+        .setFontColor("#ffffff");
+      sheet.setFrozenRows(1);
     }
     
+    // 1. Parsing robuste du corps de requête (supporte application/json et text/plain)
     var data = {};
     if (e && e.postData && e.postData.contents) {
       try {
         data = JSON.parse(e.postData.contents);
-      } catch(err) {
+      } catch(parseErr) {
         data = e.parameter || {};
       }
     } else if (e && e.parameter) {
       data = e.parameter;
     }
     
+    // 2. Mapping tolérant de tous les alias possibles (name, biggestChallenge, vipDiscountCode, timestamp, etc.)
+    var dateVal = data.date || data.timestamp || data.createdAt || new Date().toLocaleString("fr-FR");
+    var nameVal = data.firstName || data.name || data.fullName || data.prenom || data.nom || "Artisan";
+    var emailVal = data.email || data.mail || data.courriel || "";
+    var tradeVal = data.trade || data.metier || data.profession || data.corpsDeMetier || "Non précisé";
+    var problemVal = data.problem || data.biggestChallenge || data.challenge || data.besoin || data.devisProblem || data.message || "Non précisé";
+    var vipVal = data.vipCode || data.vipDiscountCode || data.promoCode || data.code || "ARTISAN50";
+    var statusVal = data.status || data.statut || "Inscrit VIP (-50%)";
+    
+    // 3. Écriture de la nouvelle ligne dans le Google Sheet
     sheet.appendRow([
-      data.date || new Date().toLocaleString("fr-FR"),
-      data.firstName || "",
-      data.email || "",
-      data.trade || "",
-      data.problem || "Non précisé",
-      data.vipCode || "ARTISAN50",
-      data.status || "Inscrit VIP"
+      dateVal,
+      nameVal,
+      emailVal,
+      tradeVal,
+      problemVal,
+      vipVal,
+      statusVal
     ]);
     
-    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "success",
+      message: "Lead enregistré dans Google Sheet",
+      columns: {
+        date: dateVal,
+        name: nameVal,
+        email: emailVal,
+        trade: tradeVal,
+        problem: problemVal,
+        vipCode: vipVal,
+        status: statusVal
+      }
+    })).setMimeType(ContentService.MimeType.JSON);
+    
   } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", error: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      error: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    try {
+      lock.releaseLock();
+    } catch(e) {}
   }
 }
-
-function doGet(e) {
-  return ContentService.createTextOutput(JSON.stringify({ status: "ok", sheetId: "${currentSheetId}" }))
-    .setMimeType(ContentService.MimeType.JSON);
-}`;
+`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
@@ -679,17 +838,29 @@ function doGet(e) {
                     <p className="text-xs text-slate-600 font-sans">
                       Toutes les inscriptions soumises par les artisans sur la landing page :
                     </p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
-                        onClick={handleAddTestLead}
-                        className="px-2.5 py-1 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
+                        onClick={() => handleSendTestLeads(1)}
+                        disabled={isTestingWebhook || isSyncing}
+                        className="px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                        title="Créer et envoyer immédiatement 1 artisan fictif vers votre Google Sheet"
                       >
-                        + Ajouter un lead test
+                        <Send className="w-3 h-3" />
+                        <span>{isTestingWebhook ? 'Envoi...' : '+ Envoyer 1 artisan test'}</span>
+                      </button>
+                      <button
+                        onClick={() => handleSendTestLeads(3)}
+                        disabled={isTestingWebhook || isSyncing}
+                        className="px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:text-black bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                        title="Créer et envoyer 3 profils d'artisans fictifs (Électricien, Plombier, Peintre)"
+                      >
+                        <Sparkles className="w-3 h-3 text-amber-500" />
+                        <span>🚀 Envoyer 3 artisans fictifs</span>
                       </button>
                       <button
                         onClick={handleSyncToSheets}
                         disabled={isSyncing || isLoading}
-                        className="px-3 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center gap-1.5 cursor-pointer"
+                        className="px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center gap-1.5 cursor-pointer"
                         title="Synchroniser toutes les inscriptions vers Google Sheet"
                       >
                         <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -812,10 +983,24 @@ function doGet(e) {
                   </div>
 
                   {/* Webhook Input & Test */}
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-                    <label className="block text-xs font-bold text-slate-800">
-                      URL de l'Application Web / Webhook Apps Script :
-                    </label>
+                  <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <label className="block text-xs font-bold text-slate-800 font-heading">
+                        URL de votre Application Web / Webhook Apps Script :
+                      </label>
+                      {customWebhookUrl ? (
+                        <span className="text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          Webhook Actif
+                        </span>
+                      ) : (
+                        <span className="text-[11px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 text-amber-600" />
+                          URL en attente
+                        </span>
+                      )}
+                    </div>
+
                     <div className="flex gap-2">
                       <input
                         type="url"
@@ -826,28 +1011,161 @@ function doGet(e) {
                       />
                       <button
                         onClick={handleSaveWebhook}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shrink-0"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shrink-0 shadow-sm"
                       >
-                        Activer
+                        {customWebhookUrl ? 'Mettre à jour' : 'Activer'}
                       </button>
                     </div>
 
-                    {customWebhookUrl && (
-                      <div className="pt-1 flex items-center justify-between">
-                        <span className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          Webhook actif et prêt à recevoir les inscriptions
-                        </span>
-                        <button
-                          onClick={handleTestWebhook}
-                          disabled={isTestingWebhook}
-                          className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                        >
-                          <Send className="w-3 h-3" />
-                          <span>{isTestingWebhook ? 'Envoi test...' : 'Envoyer un test au Webhook'}</span>
-                        </button>
+                    {customWebhookUrl ? (
+                      <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 space-y-3">
+                        <div className="flex items-start gap-2 text-xs text-emerald-900">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          <div>
+                            <strong className="block text-emerald-950 font-heading">Webhook prêt à recevoir des inscriptions</strong>
+                            <p className="text-[11px] text-emerald-800">
+                              Chaque artisan s'inscrivant sur votre landing page sera automatiquement enregistré sur votre feuille Google Sheet.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-wrap pt-1">
+                          <button
+                            onClick={() => handleSendTestLeads(1)}
+                            disabled={isTestingWebhook}
+                            className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors shadow-sm"
+                          >
+                            <Send className="w-3 h-3" />
+                            <span>{isTestingWebhook ? 'Envoi...' : '⚡ Envoyer 1 artisan test au Sheet'}</span>
+                          </button>
+                          <button
+                            onClick={handleTestJsonPayload}
+                            disabled={isTestingWebhook}
+                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors shadow-sm"
+                            title="Tester la soumission avec le schéma JSON standard (name, biggestChallenge, vipDiscountCode, timestamp)"
+                          >
+                            <Code className="w-3 h-3 text-indigo-200" />
+                            <span>{isTestingWebhook ? 'Envoi...' : '🧪 Tester payload JSON standard'}</span>
+                          </button>
+                          <button
+                            onClick={() => handleSendTestLeads(3)}
+                            disabled={isTestingWebhook}
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors shadow-sm"
+                          >
+                            <Sparkles className="w-3 h-3 text-amber-300" />
+                            <span>🚀 Envoyer 3 artisans fictifs complets</span>
+                          </button>
+                          <a
+                            href={currentSheetUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1.5 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                          >
+                            <FileSpreadsheet className="w-3 h-3" />
+                            <span>Vérifier dans Google Sheet</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-3.5 space-y-2 text-xs text-blue-900 font-sans">
+                        <div className="font-bold flex items-center gap-1.5 text-blue-950">
+                          <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+                          <span>Où trouver cette URL ?</span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed text-slate-600">
+                          Dans votre Google Sheet, après avoir collé le code ci-dessus dans <strong>Extensions &gt; Apps Script</strong>, cliquez sur <strong>Déployer &gt; Nouveau déploiement &gt; Application Web</strong>. Google affiche alors l'URL de votre Webhook (se terminant par <code>/exec</code>). Collez-la dans le champ ci-dessus.
+                        </p>
+                        <div className="pt-1 flex items-center gap-2 flex-wrap">
+                          <button
+                            onClick={() => handleSendTestLeads(1)}
+                            disabled={isTestingWebhook}
+                            className="px-3 py-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                          >
+                            <Send className="w-3 h-3 text-blue-600" />
+                            <span>Tester avec 1 artisan fictif maintenant</span>
+                          </button>
+                          <button
+                            onClick={handleTestJsonPayload}
+                            disabled={isTestingWebhook}
+                            className="px-3 py-1 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-800 rounded-lg text-xs font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                          >
+                            <Code className="w-3 h-3 text-indigo-600" />
+                            <span>Tester payload JSON standard</span>
+                          </button>
+                        </div>
                       </div>
                     )}
+
+                    {/* JSON Payload Specification & Column Mapping Box */}
+                    <div className="bg-slate-900 text-slate-200 p-4 rounded-xl text-xs space-y-3 font-sans border border-slate-800">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="font-heading font-bold text-white flex items-center gap-1.5 text-xs">
+                          <Code className="w-4 h-4 text-indigo-400" />
+                          <span>Structure du Payload JSON & Correspondance Colonnes Google Sheet</span>
+                        </div>
+                        <button
+                          onClick={handleCopyCurl}
+                          className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-mono flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          {copiedCurl ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedCurl ? 'Commande curl copiée !' : 'Copier curl de test'}</span>
+                        </button>
+                      </div>
+
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        L'Apps Script ci-dessus parse automatiquement le JSON envoyé via POST (<code>Content-Type: application/json</code> ou <code>text/plain</code>) et mappe les champs vers les 7 colonnes du Google Sheet :
+                      </p>
+
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-[11px] border-collapse font-mono">
+                          <thead>
+                            <tr className="text-slate-400 border-b border-slate-800 text-left">
+                              <th className="py-1.5 px-2">Champ JSON</th>
+                              <th className="py-1.5 px-2">Alias supportés</th>
+                              <th className="py-1.5 px-2">Colonne Google Sheet</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                            <tr>
+                              <td className="py-1.5 px-2 text-indigo-300">timestamp</td>
+                              <td className="py-1.5 px-2 text-slate-400">date, createdAt</td>
+                              <td className="py-1.5 px-2 text-emerald-400">Colonne A : Date Inscription</td>
+                            </tr>
+                            <tr>
+                              <td className="py-1.5 px-2 text-indigo-300">name</td>
+                              <td className="py-1.5 px-2 text-slate-400">firstName, fullName, prenom</td>
+                              <td className="py-1.5 px-2 text-emerald-400">Colonne B : Prénom &amp; Nom Artisan</td>
+                            </tr>
+                            <tr>
+                              <td className="py-1.5 px-2 text-indigo-300">email</td>
+                              <td className="py-1.5 px-2 text-slate-400">mail, courriel</td>
+                              <td className="py-1.5 px-2 text-emerald-400">Colonne C : Email Professionnel</td>
+                            </tr>
+                            <tr>
+                              <td className="py-1.5 px-2 text-indigo-300">trade</td>
+                              <td className="py-1.5 px-2 text-slate-400">metier, profession</td>
+                              <td className="py-1.5 px-2 text-emerald-400">Colonne D : Corps de Métier</td>
+                            </tr>
+                            <tr>
+                              <td className="py-1.5 px-2 text-indigo-300">biggestChallenge</td>
+                              <td className="py-1.5 px-2 text-slate-400">problem, challenge, besoin</td>
+                              <td className="py-1.5 px-2 text-emerald-400">Colonne E : Problème Devis Exprimé</td>
+                            </tr>
+                            <tr>
+                              <td className="py-1.5 px-2 text-indigo-300">vipDiscountCode</td>
+                              <td className="py-1.5 px-2 text-slate-400">vipCode, code, promoCode</td>
+                              <td className="py-1.5 px-2 text-emerald-400">Colonne F : Code VIP Appliqué</td>
+                            </tr>
+                            <tr>
+                              <td className="py-1.5 px-2 text-indigo-300">status</td>
+                              <td className="py-1.5 px-2 text-slate-400">statut</td>
+                              <td className="py-1.5 px-2 text-emerald-400">Colonne G : Statut Inscription</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

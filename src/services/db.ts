@@ -18,6 +18,7 @@ export interface Profile {
   insurance_info?: string; // ex: "Assurance décennale AXA n° 849204..."
   is_tva_subject: boolean; // false = mention art. 293 B du CGI
   trade: string; // Métier principal (Plomberie, Électricité, etc.)
+  logo_url?: string; // Data URL ou image de l'entreprise
   created_at: string;
 }
 
@@ -79,6 +80,12 @@ export interface DocumentItem {
   position: number;
 }
 
+export interface TvaBreakdownItem {
+  rate: number;
+  base_ht: number;
+  tva_amount: number;
+}
+
 export interface Document {
   id: string;
   user_id: string;
@@ -94,7 +101,17 @@ export interface Document {
   status: DocumentStatus;
   notes?: string;
   footer?: string; // Mentions légales auto (art 293 B ou décennale)
+  logo_url?: string;
   tva_rate_default: number; // 10% par défaut pour réno, ou 0% si franchise
+  discount_type?: 'percent' | 'fixed';
+  discount_value?: number;
+  discount_amount?: number;
+  deposit_rate?: number; // ex: 30%
+  deposit_amount?: number;
+  balance_due?: number;
+  validity_days?: number; // ex: 30 jours
+  work_start_date?: string;
+  tva_breakdown?: TvaBreakdownItem[];
   total_ht: number;
   total_tva: number;
   total_ttc: number;

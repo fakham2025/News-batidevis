@@ -3,30 +3,50 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
-import { WifiOff, Wifi, Check, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { WifiOff, Wifi, RefreshCw, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { getSavedDocuments } from '../services/db';
 
-export const OfflineIndicator: React.FC = () => {
-  const [isOnline, setIsOnline] = useState<boolean>(() => {
-    return typeof navigator !== 'undefined' ? navigator.onLine : true;
-  });
-  const [showReconnected, setShowReconnected] = useState(false);
+export function OfflineIndicator() {
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'offline' | 'online'>('offline');
+  const [unsyncedCount, setUnsyncedCount] = useState(0);
 
   useEffect(() => {
+    const updateUnsynced = () => {
+      const docs = getSavedDocuments();
+      const unsynced = docs.filter(d => !d.synced_at || d.status === 'brouillon_local').length;
+      setUnsyncedCount(unsynced);
+    };
+
+    updateUnsynced();
+
     const handleOnline = () => {
       setIsOnline(true);
-      setShowReconnected(true);
-      const timer = setTimeout(() => setShowReconnected(false), 3500);
-      return () => clearTimeout(timer);
+      setToastType('online');
+      setToastMessage('Connexion rétablie — synchronisation automatique effectuée.');
+      setShowToast(true);
+      updateUnsynced();
+      setTimeout(() => setShowToast(false), 4500);
     };
 
     const handleOffline = () => {
       setIsOnline(false);
-      setShowReconnected(false);
+      setToastType('offline');
+      setToastMessage('Mode Hors-ligne actif — vos devis et kits restent 100% accessibles et sauvegardés.');
+      setShowToast(true);
+      updateUnsynced();
     };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
+    // Initial check
+    if (!navigator.onLine) {
+      handleOffline();
+    }
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -34,35 +54,49 @@ export const OfflineIndicator: React.FC = () => {
     };
   }, []);
 
-  if (isOnline && !showReconnected) {
+  if (isOnline && !showToast) {
     return null;
   }
 
-  if (showReconnected) {
-    return (
-      <aside
-        aria-label="Statut réseau"
-        className="fixed bottom-5 left-4 sm:left-6 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-slate-950/95 text-emerald-400 border border-emerald-500/40 shadow-xl backdrop-blur-md text-xs font-sans animate-in fade-in slide-in-from-bottom-2"
-      >
-        <span className="w-2 h-2 rounded-full bg-emerald-400" />
-        <Wifi className="w-3.5 h-3.5 text-emerald-400" />
-        <span className="font-semibold text-white">Connexion rétablie</span>
-        <span className="text-slate-400 hidden sm:inline">• Synchronisation cloud active</span>
-      </aside>
-    );
-  }
-
   return (
-    <aside
-      aria-label="Statut réseau"
-      className="fixed bottom-5 left-4 sm:left-6 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-slate-950/95 text-amber-300 border border-amber-500/40 shadow-xl backdrop-blur-md text-xs font-sans animate-in fade-in slide-in-from-bottom-2 max-w-sm"
-    >
-      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
-      <WifiOff className="w-4 h-4 text-amber-400 shrink-0" />
-      <div className="text-left leading-snug">
-        <div className="font-heading font-bold text-white text-xs">Mode Hors-ligne actif</div>
-        <div className="text-[11px] text-slate-300">Vos devis sont enregistrés localement sur votre téléphone.</div>
+    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-40 transition-all duration-300 animate-slide-up">
+      <div className={`p-3.5 rounded-2xl shadow-xl backdrop-blur-md border flex items-center justify-between gap-3 ${
+        toastType === 'offline'
+          ? 'bg-amber-950/90 text-amber-100 border-amber-600/40 shadow-amber-950/50'
+          : 'bg-emerald-950/90 text-emerald-100 border-emerald-600/40 shadow-emerald-950/50'
+      }`}>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+            toastType === 'offline' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'
+          }`}>
+            {toastType === 'offline' ? (
+              <WifiOff className="w-4 h-4 animate-pulse" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold leading-tight flex items-center gap-1.5">
+              <span>{toastType === 'offline' ? 'Hors connexion sur chantier' : 'En ligne'}</span>
+              {unsyncedCount > 0 && toastType === 'offline' && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/30 text-amber-200">
+                  {unsyncedCount} devis local
+                </span>
+              )}
+            </p>
+            <p className="text-[11px] opacity-80 truncate">{toastMessage}</p>
+          </div>
+        </div>
+
+        {toastType === 'offline' && (
+          <button
+            onClick={() => setShowToast(false)}
+            className="text-[11px] font-semibold underline px-2 py-1 text-amber-300 hover:text-white shrink-0"
+          >
+            Masquer
+          </button>
+        )}
       </div>
-    </aside>
+    </div>
   );
-};
+}

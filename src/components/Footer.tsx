@@ -1,4 +1,5 @@
 import { FileCheck2, ShieldCheck, Mail, Phone, Lock } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface FooterProps {
   onOpenLegal: (type: 'mentions' | 'cgu' | 'privacy' | 'contact') => void;
@@ -36,6 +37,10 @@ export function Footer({ onOpenLegal, onOpenAdmin }: FooterProps) {
               <span className="flex items-center gap-1.5 text-slate-400">
                 <ShieldCheck className="w-4 h-4 text-blue-400" /> Données hébergées en France (RGPD)
               </span>
+            </div>
+
+            <div className="pt-2">
+              <PWAInstallButton variant="footer" />
             </div>
           </div>
 

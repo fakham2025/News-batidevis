@@ -20,6 +20,7 @@ import { OnboardingModal } from './components/OnboardingModal';
 import { LegalModal } from './components/LegalModal';
 import { VercelDeployGuideModal } from './components/VercelDeployGuideModal';
 import { AdminBackendModal } from './components/AdminBackendModal';
+import { OfflineIndicator } from './components/OfflineIndicator';
 import { initAuth } from './services/googleSheets';
 import { Kit } from './services/db';
 
@@ -209,6 +210,9 @@ export default function App() {
         isOpen={deployGuideOpen}
         onClose={() => setDeployGuideOpen(false)}
       />
+
+      {/* Offline Indicator & Connectivity Toast */}
+      <OfflineIndicator />
     </div>
   );
 }

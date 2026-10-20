@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { FileCheck2, Menu, X, ArrowRight, ShieldCheck, Play, Sparkles, Smartphone } from 'lucide-react';
 import { getFounderCohortStats } from '../services/db';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface NavbarProps {
   onOpenDemo: () => void;
@@ -125,6 +126,8 @@ export function Navbar({ onOpenDemo, onOpenDevisBuilder, onOpenOnboarding }: Nav
 
             {/* Desktop Action buttons */}
             <div className="hidden sm:flex items-center gap-2.5">
+              <PWAInstallButton variant="navbar" />
+
               {onOpenDevisBuilder && (
                 <button
                   onClick={onOpenDevisBuilder}
@@ -197,6 +200,7 @@ export function Navbar({ onOpenDemo, onOpenDevisBuilder, onOpenOnboarding }: Nav
             </button>
             
             <div className="pt-2 flex flex-col gap-2.5">
+              <PWAInstallButton variant="banner" className="mb-1" />
               {onOpenDevisBuilder && (
                 <button
                   onClick={() => {

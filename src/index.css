@@ -76,3 +76,32 @@
 .animate-float-reverse {
   animation: floatReverse 7s ease-in-out infinite;
 }
+
+/* Impression & Export PDF A4 Haute Fidélité */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  header, footer, nav, .print\:hidden {
+    display: none !important;
+  }
+
+  .fixed {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  tr, .print-avoid-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 12mm 10mm 12mm 10mm;
+  }
+}

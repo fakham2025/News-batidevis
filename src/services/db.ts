@@ -19,6 +19,7 @@ export interface Profile {
   is_tva_subject: boolean; // false = mention art. 293 B du CGI
   trade: string; // Métier principal (Plomberie, Électricité, etc.)
   logo_url?: string; // Data URL ou image de l'entreprise
+  document_prefix?: string; // ex: "DEV-2026-"
   created_at: string;
 }
 
@@ -503,6 +504,101 @@ export const INITIAL_DOCUMENTS: Document[] = [
     ]
   }
 ];
+
+// Helper : Calcul financier certifié BTP (multi-TVA, remises, et acompte 30%)
+export function calculateDocumentFinancials(
+  items: DocumentItem[],
+  isTvaSubject: boolean,
+  discountType: 'none' | 'percent' | 'fixed' = 'none',
+  discountValue: number = 0,
+  depositRate: number = 30
+): {
+  raw_total_ht: number;
+  discount_amount: number;
+  net_total_ht: number;
+  tva_breakdown: TvaBreakdownItem[];
+  total_tva: number;
+  total_ttc: number;
+  deposit_amount: number;
+  balance_due: number;
+} {
+  const raw_total_ht = Math.round(
+    items.reduce((acc, it) => acc + (it.quantity * it.unit_price), 0) * 100
+  ) / 100;
+
+  let discount_amount = 0;
+  if (discountType === 'percent' && discountValue > 0) {
+    discount_amount = Math.round(raw_total_ht * (Math.min(100, Math.max(0, discountValue)) / 100) * 100) / 100;
+  } else if (discountType === 'fixed' && discountValue > 0) {
+    discount_amount = Math.round(Math.min(raw_total_ht, Math.max(0, discountValue)) * 100) / 100;
+  }
+
+  const net_total_ht = Math.round(Math.max(0, raw_total_ht - discount_amount) * 100) / 100;
+
+  // Si l'artisan n'est pas assujetti à la TVA (art. 293 B)
+  if (!isTvaSubject) {
+    const total_ttc = net_total_ht;
+    const deposit_amount = Math.round(total_ttc * (Math.max(0, Math.min(100, depositRate)) / 100) * 100) / 100;
+    const balance_due = Math.round((total_ttc - deposit_amount) * 100) / 100;
+
+    return {
+      raw_total_ht,
+      discount_amount,
+      net_total_ht,
+      tva_breakdown: [{ rate: 0, base_ht: net_total_ht, tva_amount: 0 }],
+      total_tva: 0,
+      total_ttc,
+      deposit_amount,
+      balance_due
+    };
+  }
+
+  // Ventilation TVA proportionnelle
+  const discountRatio = raw_total_ht > 0 ? (net_total_ht / raw_total_ht) : 1;
+  const ratesMap = new Map<number, number>();
+
+  items.forEach(it => {
+    const rate = Number(it.tva_rate) || 0;
+    const itemHt = it.quantity * it.unit_price;
+    const currentBase = ratesMap.get(rate) || 0;
+    ratesMap.set(rate, currentBase + itemHt);
+  });
+
+  const tva_breakdown: TvaBreakdownItem[] = [];
+  let total_tva = 0;
+
+  // Taux standards français ordonnés
+  const standardRates = [0, 5.5, 10, 20];
+  standardRates.forEach(rate => {
+    if (ratesMap.has(rate)) {
+      const grossBase = ratesMap.get(rate)!;
+      const netBase = Math.round(grossBase * discountRatio * 100) / 100;
+      const tva = Math.round(netBase * (rate / 100) * 100) / 100;
+      tva_breakdown.push({
+        rate,
+        base_ht: netBase,
+        tva_amount: tva
+      });
+      total_tva += tva;
+    }
+  });
+
+  total_tva = Math.round(total_tva * 100) / 100;
+  const total_ttc = Math.round((net_total_ht + total_tva) * 100) / 100;
+  const deposit_amount = Math.round(total_ttc * (Math.max(0, Math.min(100, depositRate)) / 100) * 100) / 100;
+  const balance_due = Math.round((total_ttc - deposit_amount) * 100) / 100;
+
+  return {
+    raw_total_ht,
+    discount_amount,
+    net_total_ht,
+    tva_breakdown,
+    total_tva,
+    total_ttc,
+    deposit_amount,
+    balance_due
+  };
+}
 
 // Helper : Initialisation ou lecture du profil artisan
 export function getSavedProfile(): Profile {

@@ -1,3 +1,8 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { useState } from 'react';
 import { 
   ArrowRight, 
@@ -11,17 +16,28 @@ import {
   Battery, 
   Send,
   Layers,
-  ArrowUpRight
+  ArrowUpRight,
+  MessageCircle,
+  FileText
 } from 'lucide-react';
+import { getFounderCohortStats } from '../services/db';
 
 interface HeroSectionProps {
   onOpenDemo: () => void;
   onScrollToWaitlist: () => void;
+  onOpenDevisBuilder?: () => void;
+  onOpenOnboarding?: () => void;
 }
 
-export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps) {
+export function HeroSection({ 
+  onOpenDemo, 
+  onScrollToWaitlist,
+  onOpenDevisBuilder,
+  onOpenOnboarding
+}: HeroSectionProps) {
   const [deviceSigned, setDeviceSigned] = useState(false);
   const [deviceSent, setDeviceSent] = useState(false);
+  const cohortStats = getFounderCohortStats();
 
   const handleDeviceSign = () => {
     setDeviceSigned(true);
@@ -40,18 +56,14 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
       {/* Background Architectural Grid Pattern */}
       <div className="absolute inset-0 bg-tech-grid-dark pointer-events-none opacity-80" />
 
-      {/* Subtle Atmospheric Gradients: Cobalt Blue toward Slate Gray (Ardoise) */}
+      {/* Subtle Atmospheric Gradients */}
       <div className="absolute top-[-10%] left-[-5%] w-[650px] h-[650px] bg-gradient-to-br from-blue-600/25 via-blue-900/15 to-transparent rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-[20%] right-[-10%] w-[700px] h-[600px] bg-gradient-to-bl from-slate-700/25 via-blue-700/20 to-transparent rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[30%] w-[500px] h-[400px] bg-gradient-to-t from-blue-500/15 via-slate-800/15 to-transparent rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Decorative floating 3D geometric wireframes in background */}
-      <div className="absolute top-28 left-8 w-16 h-16 rounded-2xl border border-blue-500/25 bg-blue-500/5 backdrop-blur-xs rotate-12 -z-0 pointer-events-none hidden xl:block animate-float-slow" />
-      <div className="absolute bottom-24 right-12 w-20 h-20 rounded-3xl border border-slate-600/30 bg-slate-800/15 backdrop-blur-xs -rotate-6 -z-0 pointer-events-none hidden xl:block animate-float-reverse" />
-
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
         
-        {/* Asymmetrical 2026 Layout Grid: 7 cols (Text & Actions) / 5 cols (3D Floating Stage) */}
+        {/* Asymmetrical 2026 Layout Grid: 7 cols / 5 cols */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
           
           {/* ============================================================== */}
@@ -59,17 +71,17 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
           {/* ============================================================== */}
           <div className="lg:col-span-7 text-center lg:text-left space-y-7 sm:space-y-8">
             
-            {/* 3D Glass Badge - Cobalt to Slate border */}
+            {/* 3D Glass Badge */}
             <div className="inline-flex items-center gap-3 p-1 pr-4 rounded-full bg-slate-900/90 border border-blue-500/35 shadow-[0_4px_20px_rgba(37,99,235,0.2)] backdrop-blur-xl">
               <span className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white shadow-xs">
                 <Sparkles className="w-3.5 h-3.5 text-blue-200" />
               </span>
               <span className="font-heading font-semibold text-xs sm:text-sm tracking-wide text-white">
-                🚀 Accès anticipé -50% à vie
+                🚀 Programme Fondateurs : Bêta gratuite & -50% à vie
               </span>
               <span className="h-3 w-px bg-slate-700 hidden sm:inline" />
               <span className="font-mono text-[10px] text-blue-400 font-bold uppercase tracking-wider hidden sm:inline">
-                PIONNIER 2026
+                {cohortStats.remainingTotal}/20 PLACES
               </span>
             </div>
 
@@ -83,16 +95,16 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
 
             {/* Subtitle in Inter */}
             <p className="font-sans text-sm sm:text-lg lg:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-normal">
-              Générez des devis conformes aux mentions obligatoires 2026 en 60 secondes, directement depuis votre téléphone sur chantier. Fini les erreurs Word et les oublis.
+              Générez des devis conformes aux mentions obligatoires 2026 en 60 secondes, directement depuis votre téléphone sur chantier grâce aux <strong>Kits Chantier</strong> pré-chiffrés.
             </p>
 
-            {/* Action Group: Dual Buttons */}
+            {/* Action Group: Dual Buttons + Try Builder shortcut */}
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 sm:gap-4 pt-1">
               <button
                 onClick={onScrollToWaitlist}
                 className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-heading font-bold text-base sm:text-lg flex items-center justify-center gap-3 shadow-[0_0_35px_-5px_rgba(37,99,235,0.6)] border-t border-white/20 transition-all active:scale-[0.98] cursor-pointer group min-h-[52px]"
               >
-                <span>Rejoindre la liste d'attente</span>
+                <span>Rejoindre la cohorte (-50% à vie)</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
               </button>
 
@@ -103,51 +115,50 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
                 <div className="w-6 h-6 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
                   <Play className="w-3 h-3 fill-blue-400" />
                 </div>
-                <span>Voir la démo</span>
+                <span>Voir la démo Loom (90 s)</span>
               </button>
             </div>
 
-            {/* Mobile-first Quick Trust Badges Strip (visible on mobile only) */}
+            {/* Mobile-first Quick Trust Badges Strip */}
             <div className="grid grid-cols-3 gap-2 pt-1 sm:hidden">
               <div className="bg-slate-900/90 border border-slate-800 py-2 px-2 rounded-xl text-center">
                 <div className="font-mono text-blue-400 font-bold text-xs">⚡ 48s</div>
-                <div className="text-[10px] text-slate-400">Chiffrage express</div>
+                <div className="text-[10px] text-slate-400">Kits Chantier</div>
               </div>
               <div className="bg-slate-900/90 border border-slate-800 py-2 px-2 rounded-xl text-center">
                 <div className="font-mono text-blue-400 font-bold text-xs">🛡️ 2026</div>
-                <div className="text-[10px] text-slate-400">16 mentions PDP</div>
+                <div className="text-[10px] text-slate-400">16 mentions</div>
               </div>
               <div className="bg-slate-900/90 border border-slate-800 py-2 px-2 rounded-xl text-center">
-                <div className="font-mono text-blue-400 font-bold text-xs">✍️ eIDAS</div>
-                <div className="text-[10px] text-slate-400">Signature SMS</div>
+                <div className="font-mono text-blue-400 font-bold text-xs">✍️ Tracé</div>
+                <div className="text-[10px] text-slate-400">Signature tactile</div>
               </div>
             </div>
 
-            {/* Social Proof & Micro-copy in Inter font */}
+            {/* Social Proof & Real Cohort Counter (Checklist §6) */}
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 sm:gap-6 text-xs sm:text-sm text-slate-400 font-sans">
               <div className="flex items-center gap-2.5">
-                {/* 3D Stacked Avatars */}
                 <div className="flex -space-x-2.5">
                   <div className="w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-950 text-blue-400 font-mono font-bold flex items-center justify-center text-[10px] shadow-sm">
-                    MD
+                    PL
                   </div>
                   <div className="w-8 h-8 rounded-full bg-blue-900 border-2 border-slate-950 text-blue-200 font-mono font-bold flex items-center justify-center text-[10px] shadow-sm">
-                    SL
+                    EL
                   </div>
                   <div className="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-950 text-slate-200 font-mono font-bold flex items-center justify-center text-[10px] shadow-sm">
-                    TR
+                    PT
                   </div>
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-slate-800 border-2 border-slate-950 text-white font-mono font-bold flex items-center justify-center text-[10px] shadow-sm">
-                    +240
+                    +{cohortStats.totalRegistered}
                   </div>
                 </div>
 
                 <div className="text-left">
                   <div className="font-heading font-bold text-white text-xs sm:text-sm">
-                    Déjà 247 artisans inscrits
+                    Cohorte 1 : {cohortStats.remainingTotal} / {cohortStats.maxTotal} places restantes
                   </div>
                   <div className="text-[11px] text-slate-400 font-sans">
-                    artisans du BTP en France
+                    Artisans du BTP en cours de sélection
                   </div>
                 </div>
               </div>
@@ -156,7 +167,7 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
 
               <div className="flex items-center gap-2 font-medium text-slate-300">
                 <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                <span>Sans engagement</span>
+                <span>Bêta gratuite • Sans engagement</span>
               </div>
             </div>
 
@@ -171,16 +182,16 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
               
               <div className="flex items-center gap-2.5 text-xs text-slate-300">
                 <div className="w-6 h-6 rounded-lg bg-blue-950/90 text-blue-400 border border-blue-800/60 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <Layers className="w-3.5 h-3.5" />
                 </div>
-                <span>Conforme Factur-X & PDP</span>
+                <span>Kits Chantier temps réel</span>
               </div>
 
               <div className="flex items-center gap-2.5 text-xs text-slate-300 col-span-2 sm:col-span-1">
                 <div className="w-6 h-6 rounded-lg bg-blue-950/90 text-blue-400 border border-blue-800/60 flex items-center justify-center shrink-0">
-                  <Layers className="w-3.5 h-3.5" />
+                  <ShieldCheck className="w-3.5 h-3.5" />
                 </div>
-                <span>16 mentions auto</span>
+                <span>16 mentions légales auto</span>
               </div>
             </div>
 
@@ -198,11 +209,11 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
               </div>
               <div>
                 <div className="font-heading font-extrabold text-xs text-white flex items-center gap-1.5">
-                  Conforme Factur-X 2026
+                  Conforme Mentions 2026
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
                 </div>
                 <div className="font-mono text-[10px] text-slate-400">
-                  16 mentions certifiées PDP
+                  Décennale & TVA 10% verrouillées
                 </div>
               </div>
             </div>
@@ -214,7 +225,7 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
               </div>
               <div className="text-left">
                 <div className="font-heading font-bold text-white text-xs">Chrono : 48 sec</div>
-                <div className="font-mono text-[10px] text-blue-400 font-semibold">Devis prêt à signer</div>
+                <div className="font-mono text-[10px] text-blue-400 font-semibold">Kit Chantier recalculé</div>
               </div>
             </div>
 
@@ -224,8 +235,8 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
                 <PenTool className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <div className="font-heading font-bold text-xs text-white">Signature tactile</div>
-                <div className="font-mono text-[10px] text-slate-400">Valeur juridique eIDAS</div>
+                <div className="font-heading font-bold text-xs text-white">Acceptation tracée</div>
+                <div className="font-mono text-[10px] text-slate-400">Horodatage juridique</div>
               </div>
             </div>
 
@@ -235,13 +246,13 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
               <span className="text-[11px] text-slate-300 font-heading font-semibold">9,50 € / mois</span>
             </div>
 
-            {/* The 3D Asymmetric Device Frame with Isometric Rotation on desktop, pristine crisp on mobile */}
+            {/* The 3D Asymmetric Device Frame */}
             <div className="relative w-full max-w-[310px] xs:max-w-[340px] sm:max-w-[370px] transform transition-transform duration-500 hover:rotate-0 sm:rotate-y-[-4deg] sm:rotate-x-[3deg] sm:preserve-3d">
               
               {/* Backlight halo glow */}
               <div className="absolute -inset-4 bg-gradient-to-tr from-blue-600/30 via-slate-600/20 to-blue-400/20 rounded-[52px] blur-2xl -z-10 opacity-80" />
 
-              {/* Smartphone Shell (Titanium & Slate border with 3D bevels) */}
+              {/* Smartphone Shell */}
               <div className="relative rounded-[46px] p-3 sm:p-3.5 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 shadow-[0_30px_70px_rgba(0,0,0,0.85)] ring-1 ring-white/10 border-4 border-slate-800">
                 
                 {/* Dynamic Notch */}
@@ -257,7 +268,7 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
                   <div className="pt-3 px-6 pb-2 flex items-center justify-between text-xs font-semibold text-slate-800 bg-slate-50 border-b border-slate-100 font-mono">
                     <span className="text-[11px] font-bold">09:41</span>
                     <div className="flex items-center gap-1.5 text-slate-600">
-                      <span className="text-[9px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded">4G CHANTIER</span>
+                      <span className="text-[9px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded">HORS-LIGNE</span>
                       <Wifi className="w-3.5 h-3.5" />
                       <Battery className="w-4 h-4 text-slate-800" />
                     </div>
@@ -277,7 +288,7 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
                       </div>
                     </div>
                     <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200">
-                      CONFORME 2026
+                      KIT PLOMBERIE
                     </span>
                   </div>
 
@@ -353,7 +364,7 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
                         <span className="font-heading font-bold text-slate-800 flex items-center gap-1">
                           <PenTool className="w-3 h-3 text-blue-600" /> Signature client
                         </span>
-                        <span className="text-[10px] text-blue-600 font-mono">Sur écran</span>
+                        <span className="text-[10px] text-blue-600 font-mono">Sur écran tactile</span>
                       </div>
 
                       <div
@@ -387,18 +398,19 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
                       {deviceSent ? (
                         <>
                           <Check className="w-3.5 h-3.5 text-white" />
-                          <span>Envoyé par SMS & Email !</span>
+                          <span>Envoyé par WhatsApp & Email !</span>
                         </>
                       ) : (
                         <>
                           <Send className="w-3.5 h-3.5" />
-                          <span>Envoyer au client (1-clic)</span>
+                          <span>Envoyer WhatsApp (1-clic)</span>
                         </>
                       )}
                     </button>
                     <button
                       onClick={onOpenDemo}
                       className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:text-blue-600 transition-colors cursor-pointer"
+                      title="Voir la démo complète"
                     >
                       <ArrowUpRight className="w-4 h-4" />
                     </button>

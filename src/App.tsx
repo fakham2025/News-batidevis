@@ -10,18 +10,24 @@ import { HeroSection } from './components/HeroSection';
 import { ProblemSection } from './components/ProblemSection';
 import { SolutionSection } from './components/SolutionSection';
 import { ComparisonSection } from './components/ComparisonSection';
-import { TestimonialsSection } from './components/TestimonialsSection';
+import { FoundersSection } from './components/FoundersSection';
 import { FaqSection } from './components/FaqSection';
 import { WaitlistFormSection } from './components/WaitlistFormSection';
 import { Footer } from './components/Footer';
 import { DemoModal } from './components/DemoModal';
+import { DevisBuilderModal } from './components/DevisBuilderModal';
+import { OnboardingModal } from './components/OnboardingModal';
 import { LegalModal } from './components/LegalModal';
 import { VercelDeployGuideModal } from './components/VercelDeployGuideModal';
 import { AdminBackendModal } from './components/AdminBackendModal';
 import { initAuth } from './services/googleSheets';
+import { Kit } from './services/db';
 
 export default function App() {
   const [demoOpen, setDemoOpen] = useState(false);
+  const [devisBuilderOpen, setDevisBuilderOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [initialKitForBuilder, setInitialKitForBuilder] = useState<Kit | null>(null);
   const [legalType, setLegalType] = useState<'mentions' | 'cgu' | 'privacy' | 'contact' | null>(null);
   const [deployGuideOpen, setDeployGuideOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
@@ -47,8 +53,13 @@ export default function App() {
 
     // Support opening admin via #admin hash or keyboard shortcut Ctrl+Shift+A
     const handleHash = () => {
-      if (window.location.hash === '#admin') {
+      const hash = window.location.hash;
+      if (hash === '#admin') {
         setAdminOpen(true);
+      } else if (hash === '#builder' || hash === '#devis') {
+        setDevisBuilderOpen(true);
+      } else if (hash === '#welcome' || hash === '#onboarding') {
+        setOnboardingOpen(true);
       }
     };
     handleHash();
@@ -76,6 +87,13 @@ export default function App() {
     }
   };
 
+  const handleOpenDevisBuilderWithKit = (kit?: Kit) => {
+    if (kit) {
+      setInitialKitForBuilder(kit);
+    }
+    setDevisBuilderOpen(true);
+  };
+
   const handleCloseAdmin = () => {
     setAdminOpen(false);
     if (window.location.hash === '#admin') {
@@ -88,6 +106,8 @@ export default function App() {
       {/* 100% Clean Customer-Facing Navigation Bar */}
       <Navbar
         onOpenDemo={() => setDemoOpen(true)}
+        onOpenDevisBuilder={() => setDevisBuilderOpen(true)}
+        onOpenOnboarding={() => setOnboardingOpen(true)}
         onOpenDeployGuide={() => setDeployGuideOpen(true)}
       />
 
@@ -96,15 +116,18 @@ export default function App() {
         <HeroSection
           onOpenDemo={() => setDemoOpen(true)}
           onScrollToWaitlist={scrollToWaitlist}
+          onOpenDevisBuilder={() => setDevisBuilderOpen(true)}
+          onOpenOnboarding={() => setOnboardingOpen(true)}
         />
 
         {/* 2. SECTION PROBLÈME (3 cartes) */}
         <ProblemSection />
 
-        {/* 3. SECTION SOLUTION (3 features) */}
+        {/* 3. SECTION SOLUTION (3 features + Killer Feature Kits Chantier) */}
         <SolutionSection
           onOpenDemo={() => setDemoOpen(true)}
           onScrollToWaitlist={scrollToWaitlist}
+          onOpenDevisBuilder={handleOpenDevisBuilderWithKit}
         />
 
         {/* 4. SECTION COMPARAISON (Tableau 2 colonnes) */}
@@ -112,14 +135,19 @@ export default function App() {
           onScrollToWaitlist={scrollToWaitlist}
         />
 
-        {/* 5. SECTION TÉMOIGNAGES (Cards artisans) */}
-        <TestimonialsSection />
+        {/* 5. SECTION PROGRAMME FONDATEURS (remplace faux témoignages, quota 20 artisans) */}
+        <FoundersSection
+          onScrollToWaitlist={scrollToWaitlist}
+        />
 
-        {/* 6. SECTION FAQ (Accordion interactif) */}
+        {/* 6. SECTION FAQ (Accordion interactif avec Kits Chantier & Hors-ligne) */}
         <FaqSection />
 
-        {/* 7. SECTION FORMULAIRE WAITLIST (Données transmises en backend vers Google Sheets) */}
-        <WaitlistFormSection token={token} />
+        {/* 7. SECTION FORMULAIRE WAITLIST (Département, TVA, UTM, RGPD) */}
+        <WaitlistFormSection 
+          token={token} 
+          onOpenPrivacy={() => setLegalType('privacy')}
+        />
       </main>
 
       {/* 8. FOOTER avec déclencheur discret d'accès Admin */}
@@ -129,11 +157,33 @@ export default function App() {
         onOpenAdmin={() => setAdminOpen(true)}
       />
 
-      {/* Interactive 60s Demo Modal */}
+      {/* Interactive Loom 90s Demo Modal */}
       <DemoModal
         isOpen={demoOpen}
         onClose={() => setDemoOpen(false)}
         onGoToWaitlist={scrollToWaitlist}
+        onOpenDevisBuilder={() => setDevisBuilderOpen(true)}
+      />
+
+      {/* Cœur Produit MVP : DevisBuilder Modal avec Kits Chantier & Offline */}
+      <DevisBuilderModal
+        isOpen={devisBuilderOpen}
+        onClose={() => {
+          setDevisBuilderOpen(false);
+          setInitialKitForBuilder(null);
+        }}
+        initialKit={initialKitForBuilder}
+        onGoToWaitlist={scrollToWaitlist}
+      />
+
+      {/* Onboarding 3 étapes (/welcome) */}
+      <OnboardingModal
+        isOpen={onboardingOpen}
+        onClose={() => setOnboardingOpen(false)}
+        onComplete={(recommendedKit) => {
+          setOnboardingOpen(false);
+          handleOpenDevisBuilderWithKit(recommendedKit);
+        }}
       />
 
       {/* Dedicated Private Admin & Google Sheets Backend Modal (For Owner Only) */}

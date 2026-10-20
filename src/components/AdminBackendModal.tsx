@@ -44,6 +44,13 @@ import {
   WaitlistRecord 
 } from '../services/googleSheets';
 import { User } from 'firebase/auth';
+import { 
+  SUPABASE_SQL_SCHEMA, 
+  getSavedWaitlist, 
+  saveWaitlist, 
+  getFounderCohortStats, 
+  WaitlistEntry 
+} from '../services/db';
 
 interface AdminBackendModalProps {
   isOpen: boolean;
@@ -76,7 +83,9 @@ export function AdminBackendModal({
   const [pinChangeMsg, setPinChangeMsg] = useState<string | null>(null);
 
   // Admin Dashboard states
-  const [activeTab, setActiveTab] = useState<'leads' | 'webhook' | 'config'>('leads');
+  const [activeTab, setActiveTab] = useState<'cohort' | 'supabase' | 'leads' | 'webhook' | 'config'>('cohort');
+  const [cohortEntries, setCohortEntries] = useState<WaitlistEntry[]>([]);
+  const [copiedSql, setCopiedSql] = useState(false);
   const [leads, setLeads] = useState<WaitlistRecord[]>([]);
   const [customSheetUrl, setCustomSheetUrl] = useState('');
   const [customWebhookUrl, setCustomWebhookUrl] = useState('');
@@ -176,6 +185,7 @@ export function AdminBackendModal({
   const loadState = () => {
     const local = getLocalLeads();
     setLeads(local);
+    setCohortEntries(getSavedWaitlist());
 
     const config = getSavedSpreadsheetConfig();
     const activeId = config.id || DEFAULT_SPREADSHEET_ID;
@@ -185,6 +195,47 @@ export function AdminBackendModal({
     setCurrentSheetUrl(activeUrl);
     setCustomSheetUrl(activeUrl);
     if (config.webhookUrl) setCustomWebhookUrl(config.webhookUrl);
+  };
+
+  const handleToggleBetaPlan = (id: string) => {
+    const list = getSavedWaitlist();
+    const updated = list.map(e => {
+      if (e.id === id) {
+        const nextPlan = e.plan === 'beta' ? 'fondateur' : 'beta';
+        return { ...e, plan: nextPlan as any };
+      }
+      return e;
+    });
+    saveWaitlist(updated);
+    setCohortEntries(updated);
+    setMsgSuccess("Statut du plan mis à jour (activation bêta) !");
+    setTimeout(() => setMsgSuccess(null), 3000);
+  };
+
+  const handleExportCohortCSV = () => {
+    if (cohortEntries.length === 0) return;
+    const headers = ["ID", "Prénom", "Email", "Métier", "Département", "Statut TVA", "Problème", "Source", "Plan", "Statut", "Catégorie Quota", "Date"];
+    const rows = cohortEntries.map(e => [
+      `"${e.id}"`,
+      `"${e.prenom}"`,
+      `"${e.email}"`,
+      `"${e.metier}"`,
+      `"${e.departement}"`,
+      `"${e.statut_tva}"`,
+      `"${(e.probleme || '').replace(/"/g, '""')}"`,
+      `"${e.source}"`,
+      `"${e.plan}"`,
+      `"${e.status}"`,
+      `"${e.quota_category}"`,
+      `"${e.created_at}"`
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `batidevis_cohorte_fondateurs_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleGoogleAccountSync = async () => {
@@ -790,7 +841,30 @@ function handleLead(e) {
             )}
 
             {/* Navigation Tabs */}
-            <div className="px-5 sm:px-7 pt-4 border-b border-slate-200 flex gap-2">
+            <div className="px-5 sm:px-7 pt-4 border-b border-slate-200 flex gap-2 flex-wrap">
+              <button
+                onClick={() => setActiveTab('cohort')}
+                className={`pb-3 px-3 text-xs font-heading font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'cohort'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                <span>Cohorte 20 Fondateurs ({cohortEntries.length}/20)</span>
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              </button>
+              <button
+                onClick={() => setActiveTab('supabase')}
+                className={`pb-3 px-3 text-xs font-heading font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'supabase'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <Database className="w-4 h-4" />
+                <span>Schéma Supabase SQL</span>
+              </button>
               <button
                 onClick={() => setActiveTab('leads')}
                 className={`pb-3 px-3 text-xs font-heading font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
@@ -799,8 +873,8 @@ function handleLead(e) {
                     : 'border-transparent text-slate-500 hover:text-slate-900'
                 }`}
               >
-                <Users className="w-4 h-4" />
-                <span>Inscriptions Reçues ({leads.length})</span>
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>Google Sheets ({leads.length})</span>
                 {leads.some(l => !l.syncedToSheets) && (
                   <span className="w-2 h-2 rounded-full bg-amber-500" />
                 )}
@@ -814,7 +888,7 @@ function handleLead(e) {
                 }`}
               >
                 <Code className="w-4 h-4" />
-                <span>Activer le Webhook (Automatique 24h/24)</span>
+                <span>Webhook Apps Script</span>
               </button>
               <button
                 onClick={() => setActiveTab('config')}
@@ -825,12 +899,181 @@ function handleLead(e) {
                 }`}
               >
                 <Settings className="w-4 h-4" />
-                <span>Paramètres & Sécurité</span>
+                <span>Paramètres</span>
               </button>
             </div>
 
             {/* Content Body */}
             <div className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-6">
+              {/* ONGLET 1 : COHORTE FONDATEURS */}
+              {activeTab === 'cohort' && (
+                <div className="space-y-5 text-left">
+                  {/* Quotas Meter Strip */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-950 text-white border border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div>
+                        <div className="font-heading font-bold text-sm text-white flex items-center gap-2">
+                          <Users className="w-4 h-4 text-blue-400" />
+                          <span>Répartition des 20 Quotas Fondateurs (5 par corps d'état)</span>
+                        </div>
+                        <p className="text-xs text-slate-400 font-sans mt-0.5">
+                          Activation manuelle du plan bêta gratuit pour chaque artisan sélectionné.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleExportCohortCSV}
+                          className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-900 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          <Download className="w-3.5 h-3.5 text-blue-600" />
+                          <span>Exporter CSV Fondateurs</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+                      <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                        <div className="text-[11px] text-slate-400">Plomberie & CVC</div>
+                        <div className="text-base font-bold text-white font-mono">
+                          {cohortEntries.filter(e => e.quota_category === 'plomberie').length} / 5
+                        </div>
+                      </div>
+                      <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                        <div className="text-[11px] text-slate-400">Électricité BTP</div>
+                        <div className="text-base font-bold text-white font-mono">
+                          {cohortEntries.filter(e => e.quota_category === 'electricite').length} / 5
+                        </div>
+                      </div>
+                      <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                        <div className="text-[11px] text-slate-400">Finitions (Peinture, Carr.)</div>
+                        <div className="text-base font-bold text-white font-mono">
+                          {cohortEntries.filter(e => e.quota_category === 'finitions').length} / 5
+                        </div>
+                      </div>
+                      <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                        <div className="text-[11px] text-slate-400">Gros Œuvre & Menuiserie</div>
+                        <div className="text-base font-bold text-white font-mono">
+                          {cohortEntries.filter(e => e.quota_category === 'gros_oeuvre').length} / 5
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Candidates Table */}
+                  <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs font-sans">
+                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-heading font-bold uppercase tracking-wider text-[11px]">
+                          <tr>
+                            <th className="py-2.5 px-3">Artisan</th>
+                            <th className="py-2.5 px-3">Email Pro</th>
+                            <th className="py-2.5 px-3">Métier & Dép.</th>
+                            <th className="py-2.5 px-3">Régime TVA</th>
+                            <th className="py-2.5 px-3">Problème exprimé (Verbatim)</th>
+                            <th className="py-2.5 px-3">Source UTM</th>
+                            <th className="py-2.5 px-3">Plan Actuel</th>
+                            <th className="py-2.5 px-3 text-right">Action Bêta</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {cohortEntries.map((e) => (
+                            <tr key={e.id} className="hover:bg-slate-50/80">
+                              <td className="py-2.5 px-3 font-bold text-slate-900 whitespace-nowrap">
+                                {e.prenom}
+                              </td>
+                              <td className="py-2.5 px-3 font-mono text-[11px] text-blue-600">
+                                {e.email}
+                              </td>
+                              <td className="py-2.5 px-3 whitespace-nowrap">
+                                <span className="bg-slate-100 text-slate-800 font-medium px-2 py-0.5 rounded">
+                                  {e.metier} ({e.departement})
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3 whitespace-nowrap">
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                                  e.statut_tva === 'ae_sans_tva' ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-blue-50 text-blue-800 border border-blue-200'
+                                }`}>
+                                  {e.statut_tva === 'ae_sans_tva' ? 'Art. 293 B' : 'TVA 10/20%'}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3 max-w-xs text-slate-600 truncate" title={e.probleme}>
+                                {e.probleme}
+                              </td>
+                              <td className="py-2.5 px-3 text-slate-500 font-mono text-[10px]">
+                                {e.source}
+                              </td>
+                              <td className="py-2.5 px-3">
+                                <span className={`font-mono text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                                  e.plan === 'beta' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'
+                                }`}>
+                                  {e.plan}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleBetaPlan(e.id)}
+                                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-colors ${
+                                    e.plan === 'beta'
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
+                                      : 'bg-blue-600 text-white hover:bg-blue-700 shadow-2xs'
+                                  }`}
+                                >
+                                  {e.plan === 'beta' ? '✓ Actif Bêta' : 'Activer Bêta'}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ONGLET 2 : SCHÉMA SUPABASE SQL */}
+              {activeTab === 'supabase' && (
+                <div className="space-y-4 text-left">
+                  <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-xs text-blue-900 space-y-2">
+                    <div className="font-heading font-bold text-sm text-blue-950 flex items-center gap-2">
+                      <Database className="w-4 h-4 text-blue-600" />
+                      <span>Schéma PostgreSQL Supabase pour BATIDEVIS</span>
+                    </div>
+                    <p className="leading-relaxed font-sans text-slate-700">
+                      Ce schéma SQL contient l'intégralité des 7 tables validées pour le MVP : <code>profiles</code>, <code>clients</code>, <code>items</code>, <code>kits</code>, <code>kit_items</code>, <code>documents</code>, <code>document_items</code>, <code>waitlist</code>, <code>subscriptions</code> ainsi que les politiques de sécurité RLS (Row Level Security).
+                    </p>
+                    <div className="text-[11px] text-slate-600 font-mono">
+                      Pour exécuter : ouvrez votre projet Supabase &gt; SQL Editor &gt; New Query &gt; Collez le script et cliquez sur RUN.
+                    </div>
+                  </div>
+
+                  <div className="relative bg-slate-950 text-slate-200 p-4 rounded-2xl text-xs font-mono border border-slate-800 shadow-xl overflow-hidden">
+                    <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-800">
+                      <span className="text-slate-400 text-[11px]">schema.sql (PostgreSQL 15+ / Supabase)</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(SUPABASE_SQL_SCHEMA);
+                          setCopiedSql(true);
+                          setTimeout(() => setCopiedSql(false), 2000);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md transition-colors"
+                      >
+                        {copiedSql ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedSql ? 'Copié dans le presse-papier !' : 'Copier tout le Schéma SQL'}</span>
+                      </button>
+                    </div>
+
+                    <pre className="max-h-[500px] overflow-y-auto text-[11px] leading-relaxed text-blue-200 p-2">
+                      {SUPABASE_SQL_SCHEMA}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {/* ONGLET 3 : LEADS & GOOGLE SHEETS */}
               {activeTab === 'leads' && (
                 <div className="space-y-4">
                   {/* Unsynced Banner */}

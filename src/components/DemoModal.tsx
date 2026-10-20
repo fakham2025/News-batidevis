@@ -1,16 +1,23 @@
-import { useState } from 'react';
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { useState, useEffect } from 'react';
 import { 
   X, 
-  Check, 
+  Play, 
+  Pause, 
+  RotateCcw, 
   Smartphone, 
   ShieldCheck, 
-  Send, 
+  ArrowRight, 
+  Check, 
   Sparkles, 
-  PenTool, 
-  FileText, 
-  CheckCircle2, 
-  ArrowRight,
-  Flame
+  Clock, 
+  Video, 
+  Calculator,
+  MessageCircle
 } from 'lucide-react';
 import { Button } from './ui/Button';
 
@@ -18,235 +25,243 @@ interface DemoModalProps {
   isOpen: boolean;
   onClose: () => void;
   onGoToWaitlist: () => void;
+  onOpenDevisBuilder?: () => void;
 }
 
-export function DemoModal({ isOpen, onClose, onGoToWaitlist }: DemoModalProps) {
-  const [trade, setTrade] = useState<'plomberie' | 'electricite' | 'menuiserie'>('plomberie');
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [signatureDone, setSignatureDone] = useState(false);
-  const [isSent, setIsSent] = useState(false);
+export function DemoModal({ isOpen, onClose, onGoToWaitlist, onOpenDevisBuilder }: DemoModalProps) {
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [currentTime, setCurrentTime] = useState(12);
+  const totalDuration = 90; // 90 secondes chrono Loom
+  const [activeTab, setActiveTab] = useState<'video' | 'interactive'>('video');
+
+  // Loom chapters
+  const chapters = [
+    { start: 0, label: "00:00 - Introduction Chantier" },
+    { start: 20, label: "00:20 - Sélection d'un Kit Chantier" },
+    { start: 45, label: "00:45 - Calculateur & TVA auto" },
+    { start: 68, label: "01:08 - Signature tactile & WhatsApp" }
+  ];
+
+  useEffect(() => {
+    let interval: any;
+    if (isOpen && isPlaying && activeTab === 'video') {
+      interval = setInterval(() => {
+        setCurrentTime((prev) => {
+          if (prev >= totalDuration) {
+            setIsPlaying(false);
+            return totalDuration;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isOpen, isPlaying, activeTab]);
 
   if (!isOpen) return null;
 
-  const tradeData = {
-    plomberie: {
-      name: "Plomberie Chauffage",
-      prestation: "Remplacement chauffe-eau thermodynamique 200L + dépose",
-      fournitures: "Groupe de sécurité, raccords diélectriques, fixations murales",
-      priceHT: 1850,
-      tvaRate: 10,
-      client: "M. & Mme Lambert - Lyon 3"
-    },
-    electricite: {
-      name: "Électricité Générale",
-      prestation: "Mise en sécurité tableau électrique 3 rangées 18 modules",
-      fournitures: "Disjoncteurs différentiels 30mA Type A/AC, parafoudre",
-      priceHT: 1290,
-      tvaRate: 10,
-      client: "SCI Les Peupliers - Marseille 8"
-    },
-    menuiserie: {
-      name: "Menuiserie & Agencement",
-      prestation: "Pose de 2 fenêtres PVC double vitrage Uw 1.2 + dépose totale",
-      fournitures: "Joints d'étanchéité compriband, fixations verinées, tapées 120mm",
-      priceHT: 2150,
-      tvaRate: 5.5,
-      client: "M. Thomas Roche - Bordeaux Bastide"
-    }
-  };
-
-  const current = tradeData[trade];
-  const tvaAmount = Math.round((current.priceHT * current.tvaRate) / 100);
-  const totalTTC = current.priceHT + tvaAmount;
+  const currentChapter = chapters.slice().reverse().find(c => currentTime >= c.start) || chapters[0];
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
-      <div className="relative bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-200 my-4 sm:my-8">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+      <div className="relative bg-white rounded-3xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden text-left my-4 sm:my-8">
         
-        {/* Modal Header */}
-        <div className="bg-slate-950 text-white p-4 sm:p-6 flex items-center justify-between border-b border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0">
-              <Smartphone className="w-5 h-5" />
+        {/* Top Header */}
+        <div className="bg-slate-950 text-white p-4 sm:p-5 flex items-center justify-between border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-md">
+              <Video className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-mono text-[10px] sm:text-xs font-bold text-blue-400 uppercase tracking-wider">
-                Simulateur en direct • Moins de 60s
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] font-bold text-blue-400 uppercase tracking-wider">
+                  DÉMO PROTOTYPE LOOM • 90 SECONDES
+                </span>
+                <span className="bg-emerald-950 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-800">
+                  OFFLINE-FIRST
+                </span>
               </div>
-              <h3 className="font-heading text-lg sm:text-xl font-bold">
-                Génération de devis sur chantier
+              <h3 className="font-heading text-base sm:text-lg font-bold">
+                Comment générer un devis conforme en 60 secondes sur chantier
               </h3>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 transition-colors cursor-pointer"
             aria-label="Fermer"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Trade Selector tabs */}
-        <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-wrap gap-2 text-xs font-bold">
-          <span className="self-center text-gray-500 mr-1 text-[11px] uppercase">Choisissez votre corps d'état :</span>
-          {(['plomberie', 'electricite', 'menuiserie'] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => {
-                setTrade(t);
-                setSignatureDone(false);
-                setIsSent(false);
-              }}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                trade === t
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-white text-gray-700 border border-gray-200 hover:border-blue-300'
-              }`}
-            >
-              {tradeData[t].name}
-            </button>
-          ))}
-        </div>
+        {/* Video Screen / Player Container */}
+        <div className="relative bg-slate-950 text-white overflow-hidden aspect-video flex flex-col justify-between p-4 sm:p-6 select-none border-b border-slate-800">
+          {/* Subtle Grid & Backdrop */}
+          <div className="absolute inset-0 bg-tech-grid-dark opacity-30 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent pointer-events-none" />
 
-        {/* Step progress */}
-        <div className="px-3 sm:px-6 pt-3 sm:pt-4 flex items-center justify-between text-[11px] sm:text-xs text-gray-500 border-b border-gray-100 pb-2.5 sm:pb-3">
-          <div className="flex items-center gap-1 sm:gap-1.5 font-bold text-blue-600">
-            <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] sm:text-[11px]">1</span>
-            <span className="truncate">Prestations & Prix</span>
-          </div>
-          <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-300 shrink-0" />
-          <div className="flex items-center gap-1 sm:gap-1.5 font-bold text-blue-600">
-            <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] sm:text-[11px]">2</span>
-            <span className="truncate">Conformité 2026</span>
-          </div>
-          <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-300 shrink-0" />
-          <div className="flex items-center gap-1 sm:gap-1.5 font-bold text-blue-600">
-            <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] sm:text-[11px]">3</span>
-            <span className="truncate">Signature & Envoi</span>
-          </div>
-        </div>
+          {/* Top Player Info */}
+          <div className="relative z-10 flex items-center justify-between text-xs font-mono">
+            <div className="flex items-center gap-2 bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700/80 backdrop-blur-md">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-slate-300 font-bold">LOOM PROTOTYPE V1</span>
+              <span className="text-slate-500">•</span>
+              <span className="text-blue-400">{currentChapter.label}</span>
+            </div>
 
-        {/* Body Simulator */}
-        <div className="p-4 sm:p-6 space-y-4 max-h-[60vh] overflow-y-auto">
-          {/* Devis Paper Container */}
-          <div className="bg-white rounded-2xl border-2 border-gray-200 p-4 sm:p-5 shadow-xs space-y-4 text-xs">
-            <div className="flex justify-between items-start pb-3 border-b border-gray-200">
-              <div>
-                <div className="font-extrabold text-sm text-gray-900">ENTREPRISE ARTISAN PRO</div>
-                <div className="text-gray-500 text-[11px]">SIRET : 849 204 892 00018 • RCS Nantes</div>
-                <div className="text-emerald-700 font-semibold text-[11px]">Décennale SMA BTP n° 294021/A</div>
-              </div>
-              <div className="text-right">
-                <span className="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded text-[10px]">
-                  DEVIS N° 2026-042
+            <div className="bg-slate-900/80 px-2.5 py-1 rounded-full border border-slate-700 text-slate-300">
+              {String(Math.floor(currentTime / 60)).padStart(2, '0')}:{String(currentTime % 60).padStart(2, '0')} / 01:30
+            </div>
+          </div>
+
+          {/* Central Mock Screen Simulation */}
+          <div className="relative z-10 max-w-md mx-auto my-auto w-full p-4 rounded-2xl bg-slate-900/90 border border-slate-700 shadow-2xl backdrop-blur-md text-center space-y-3">
+            {currentTime < 20 && (
+              <div className="space-y-2 animate-in fade-in">
+                <span className="text-xs font-mono text-blue-400 font-bold uppercase tracking-wider">
+                  01. Saisie sur chantier sans réseau
                 </span>
-                <div className="text-gray-500 text-[10px] mt-1">Date : 12 Octobre 2026</div>
-              </div>
-            </div>
-
-            <div>
-              <div className="text-gray-500 text-[10px] font-bold uppercase">Client :</div>
-              <div className="font-bold text-gray-900">{current.client}</div>
-            </div>
-
-            {/* Line items */}
-            <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-2">
-              <div className="flex justify-between font-bold text-gray-800 border-b border-gray-200 pb-1">
-                <span>Désignation des travaux</span>
-                <span>Montant HT</span>
-              </div>
-              <div className="flex justify-between items-start pt-1">
-                <div>
-                  <div className="font-semibold text-gray-900">{current.prestation}</div>
-                  <div className="text-[10px] text-gray-500">{current.fournitures}</div>
-                </div>
-                <div className="font-mono font-bold text-gray-900 whitespace-nowrap">
-                  {current.priceHT.toLocaleString('fr-FR')} € HT
+                <p className="text-sm font-heading font-extrabold text-white">
+                  "L'artisan ouvre l'app dans le sous-sol : zéro temps de chargement, stockage local immédiat."
+                </p>
+                <div className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-mono bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">
+                  <Check className="w-3.5 h-3.5" /> 100% Hors-ligne garanti
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Totals */}
-            <div className="bg-blue-50/70 p-3 rounded-xl border border-blue-100 space-y-1">
-              <div className="flex justify-between text-gray-600">
-                <span>Total HT :</span>
-                <span className="font-semibold font-mono">{current.priceHT.toLocaleString('fr-FR')} €</span>
+            {currentTime >= 20 && currentTime < 45 && (
+              <div className="space-y-2 animate-in fade-in">
+                <span className="text-xs font-mono text-blue-400 font-bold uppercase tracking-wider">
+                  02. Le Kit Chantier se déploie
+                </span>
+                <p className="text-sm font-heading font-extrabold text-white">
+                  "1 clic sur 'Chauffe-eau thermodynamique' : ballon, raccords, groupe inox et main d'œuvre s'insèrent déjà chiffrés."
+                </p>
+                <div className="inline-flex items-center gap-1.5 text-xs text-blue-300 font-mono bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800">
+                  <Calculator className="w-3.5 h-3.5" /> 4 lignes créées en 3 secondes
+                </div>
               </div>
-              <div className="flex justify-between text-gray-600">
-                <span>TVA ({current.tvaRate}%) automatique :</span>
-                <span className="font-semibold font-mono">{tvaAmount.toLocaleString('fr-FR')} €</span>
-              </div>
-              <div className="flex justify-between text-sm font-bold text-blue-950 pt-1 border-t border-blue-200">
-                <span>TOTAL TTC :</span>
-                <span className="font-mono text-blue-700">{totalTTC.toLocaleString('fr-FR')} €</span>
-              </div>
-            </div>
+            )}
 
-            {/* Legal compliance notice 2026 */}
-            <div className="bg-blue-50/80 text-blue-900 p-2.5 rounded-xl border border-blue-200/80 text-[11px] flex items-start gap-2">
-              <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-              <div>
-                <strong>16 mentions obligatoires 2026 intégrées :</strong> Attestation TVA réduite, médiation de la consommation, déchets 7 flux et format Factur-X PDP prêt.
+            {currentTime >= 45 && currentTime < 68 && (
+              <div className="space-y-2 animate-in fade-in">
+                <span className="text-xs font-mono text-blue-400 font-bold uppercase tracking-wider">
+                  03. Mentions 2026 & TVA 10%
+                </span>
+                <p className="text-sm font-heading font-extrabold text-white">
+                  "TVA rénovation calculée automatiquement, décennale SMA BTP et mentions légales 2026 verrouillées."
+                </p>
+                <div className="inline-flex items-center gap-1.5 text-xs text-blue-300 font-mono bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800">
+                  <ShieldCheck className="w-3.5 h-3.5 text-blue-400" /> Zéro risque d'amende DGCCRF
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Signature simulator */}
-            <div className="pt-2">
-              <div className="text-[11px] font-bold text-gray-700 mb-1 flex items-center justify-between">
-                <span>Signature tactile du client :</span>
-                <span className="text-[10px] text-blue-600 font-medium">Touchez pour tester</span>
-              </div>
-              <div
-                onClick={() => setSignatureDone(true)}
-                className={`h-14 rounded-xl border-2 border-dashed flex items-center justify-center cursor-pointer transition-all ${
-                  signatureDone
-                    ? 'border-blue-500 bg-blue-50 text-blue-900'
-                    : 'border-gray-300 hover:border-blue-400 bg-gray-50'
-                }`}
-              >
-                {signatureDone ? (
-                  <div className="flex items-center gap-2 font-serif italic font-bold text-xs sm:text-sm text-blue-950">
-                    <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
-                    <span>« Bon pour accord » (Signé le 12/10/2026)</span>
-                  </div>
-                ) : (
-                  <div className="text-gray-500 flex items-center gap-1.5 text-xs">
-                    <PenTool className="w-4 h-4 text-gray-400 shrink-0" />
-                    <span>Touchez ici pour simuler la signature client</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Send simulation */}
-            {signatureDone && (
-              <div className="pt-2">
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => setIsSent(true)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 font-bold"
-                >
-                  {isSent ? (
-                    <span className="flex items-center gap-1.5">
-                      <Check className="w-4 h-4" /> Devis & Attestation transmis au client par SMS !
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5">
-                      <Send className="w-4 h-4" /> Envoyer copie client par SMS & Email en 1-clic
-                    </span>
-                  )}
-                </Button>
+            {currentTime >= 68 && (
+              <div className="space-y-2 animate-in fade-in">
+                <span className="text-xs font-mono text-emerald-400 font-bold uppercase tracking-wider">
+                  04. Signature tactile & WhatsApp
+                </span>
+                <p className="text-sm font-heading font-extrabold text-white">
+                  "Le client signe sur l'écran tactile, copie PDF transmise par WhatsApp avant même de redémarrer le camion !"
+                </p>
+                <div className="inline-flex items-center gap-1.5 text-xs text-emerald-300 font-mono bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">
+                  <MessageCircle className="w-3.5 h-3.5" /> Devis accepté sur place
+                </div>
               </div>
             )}
           </div>
+
+          {/* Bottom Player Controls */}
+          <div className="relative z-10 space-y-2">
+            {/* Timeline scrubber bar */}
+            <div 
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const pos = (e.clientX - rect.left) / rect.width;
+                setCurrentTime(Math.round(pos * totalDuration));
+              }}
+              className="w-full bg-slate-800 h-2 rounded-full overflow-hidden cursor-pointer relative group"
+            >
+              <div
+                className="bg-blue-500 h-full rounded-full transition-all duration-300 group-hover:bg-blue-400"
+                style={{ width: `${(currentTime / totalDuration) * 100}%` }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white cursor-pointer transition-colors"
+                >
+                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentTime(0);
+                    setIsPlaying(true);
+                  }}
+                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer transition-colors"
+                  title="Recommencer"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+                <span className="text-slate-400 font-mono text-[11px] hidden sm:inline">
+                  {isPlaying ? 'Lecture en cours...' : 'En pause'}
+                </span>
+              </div>
+
+              {onOpenDevisBuilder && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenDevisBuilder();
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-heading font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>Tester le DevisBuilder vous-même</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 4 Chapters Pills */}
+        <div className="p-4 bg-slate-50 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          {chapters.map((ch, idx) => {
+            const isPassed = currentTime >= ch.start;
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  setCurrentTime(ch.start);
+                  setIsPlaying(true);
+                }}
+                className={`p-2 rounded-xl text-left transition-all cursor-pointer border ${
+                  currentTime >= ch.start && currentTime < (chapters[idx + 1]?.start || 999)
+                    ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-xs'
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300'
+                }`}
+              >
+                <div className="text-[10px] font-mono opacity-80">{ch.label.split(' - ')[0]}</div>
+                <div className="truncate text-[11px] font-semibold mt-0.5">{ch.label.split(' - ')[1]}</div>
+              </button>
+            );
+          })}
         </div>
 
         {/* Modal Footer CTA */}
-        <div className="bg-gray-50 p-5 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-xs text-slate-600 text-center sm:text-left">
-            <span className="font-bold text-slate-900">Convaincu par la rapidité ?</span> Bloquez l'accès à <strong className="text-blue-600 font-bold">9,50€/mois à vie</strong>.
+        <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-sans">
+          <div className="text-slate-600 text-center sm:text-left">
+            Convaincu par la démonstration ? Bloquez la réduction permanente à <strong className="text-blue-600 font-bold">9,50 € / mois à vie</strong>.
           </div>
           <Button
             variant="default"
@@ -255,9 +270,9 @@ export function DemoModal({ isOpen, onClose, onGoToWaitlist }: DemoModalProps) {
               onClose();
               onGoToWaitlist();
             }}
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold cursor-pointer"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold cursor-pointer min-h-[44px]"
           >
-            <span>Rejoindre la liste d'attente</span>
+            <span>Rejoindre la cohorte fondateurs (-50%)</span>
             <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </div>

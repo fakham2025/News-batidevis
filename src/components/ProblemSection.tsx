@@ -1,4 +1,4 @@
-import { Clock, AlertTriangle, TrendingDown, ArrowDownRight } from 'lucide-react';
+import { Clock, AlertTriangle, TrendingDown, ArrowDownRight, Wallet } from 'lucide-react';
 
 export function ProblemSection() {
   const problems = [
@@ -28,6 +28,15 @@ export function ProblemSection() {
       metric: "-35%",
       metricUnit: "de taux de signature",
       impact: "Le client signe chez le premier artisan qui lui a envoyé une proposition claire."
+    },
+    {
+      code: "04 // TRÉSORERIE",
+      icon: Wallet,
+      title: "Vous courez après l'argent",
+      description: "Vous avez fait le devis, fait le chantier, avancé le matériel. Maintenant vous attendez, pendant que les salaires tombent. Une entreprise n'est pas une banque.",
+      metric: "30 à 60j",
+      metricUnit: "d'attente moyenne",
+      impact: "L'artisan fait la banque sur ses fonds propres sans oser relancer."
     }
   ];
 
@@ -51,8 +60,8 @@ export function ProblemSection() {
           </p>
         </div>
 
-        {/* 3 Bento Cards Grid - Cohesive 3-Color Palette (Slate, Cobalt Blue, White) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+        {/* 4 Bento Cards Grid - Cohesive 3-Color Palette (Slate, Cobalt Blue, White) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {problems.map((problem, index) => {
             const Icon = problem.icon;
             return (

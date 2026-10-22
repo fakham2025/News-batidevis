@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Page d'accueil principale -->
+  <url>
+    <loc>https://batidevis.fr/</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Page SEO 1 : Comparatif Quotepro -->
+  <url>
+    <loc>https://batidevis.fr/comparatif/quotepro</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Page SEO 2 : Alternative Estimapro -->
+  <url>
+    <loc>https://batidevis.fr/comparatif/estimapro</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Page SEO 3 : Turbotravaux Prix et Avis -->
+  <url>
+    <loc>https://batidevis.fr/comparatif/turbotravaux</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Page SEO 4 : Logiciel Devis Génération Automatique -->
+  <url>
+    <loc>https://batidevis.fr/comparatif/logiciel-devis-generation-automatique</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>

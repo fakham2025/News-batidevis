@@ -36,6 +36,7 @@ interface FormData {
   tvaStatus: 'ae_sans_tva' | 'tva_normale';
   problem: string;
   source: string;
+  offre: 'gratuit' | 'fondateur';
 }
 
 interface FormErrors {
@@ -59,7 +60,8 @@ export function WaitlistFormSection({ token, onOpenPrivacy, onOpenArtisanDashboa
     department: '',
     tvaStatus: 'tva_normale',
     problem: '',
-    source: 'organique_btp'
+    source: 'organique_btp',
+    offre: 'fondateur'
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -156,11 +158,14 @@ export function WaitlistFormSection({ token, onOpenPrivacy, onOpenArtisanDashboa
     };
     saveProfile(updatedProfile);
 
+    const planChoice = formData.offre === 'gratuit' ? 'beta' : 'fondateur';
+    const monthlyPrice = formData.offre === 'gratuit' ? 0 : 9.50;
+
     saveCurrentSession({
       role: 'artisan',
       userEmail: formData.email.trim(),
       companyName: companyDisplayName,
-      plan: 'fondateur',
+      plan: planChoice,
       isLoggedIn: true
     });
 
@@ -173,10 +178,10 @@ export function WaitlistFormSection({ token, onOpenPrivacy, onOpenArtisanDashboa
       artisan_name: formData.firstName.trim(),
       company_name: companyDisplayName,
       trade: formData.trade,
-      plan: 'fondateur',
+      plan: planChoice,
       status: 'active',
-      monthly_price: 9.50,
-      notes: `Inscrit via formulaire cohorte (Dép: ${formData.department})`,
+      monthly_price: monthlyPrice,
+      notes: `Inscrit via formulaire cohorte (${formData.offre === 'gratuit' ? 'Place gratuite bêta' : 'Place à -50% à vie'}) (Dép: ${formData.department})`,
       created_at: new Date().toISOString()
     };
     saveSubscriptions([newSub, ...subs]);
@@ -433,6 +438,60 @@ export function WaitlistFormSection({ token, onOpenPrivacy, onOpenArtisanDashboa
                   />
                 </div>
 
+                {/* Choix d'offre : Bêta gratuite vs -50% à vie (Modif 4) */}
+                <div className="pt-1">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 font-sans">
+                    Formule souhaitée <span className="text-red-500">*</span>
+                  </label>
+                  {/* Champ caché offre avec valeurs 'gratuit' | 'fondateur' */}
+                  <input type="hidden" name="offre" value={formData.offre} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <label
+                      onClick={() => setFormData({ ...formData, offre: 'gratuit' })}
+                      className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${
+                        formData.offre === 'gratuit'
+                          ? 'border-blue-600 bg-blue-50/80 text-slate-900 ring-2 ring-blue-500/20'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="offre_choice"
+                        value="gratuit"
+                        checked={formData.offre === 'gratuit'}
+                        onChange={() => setFormData({ ...formData, offre: 'gratuit' })}
+                        className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                      />
+                      <div className="ml-2.5">
+                        <div className="text-xs font-bold text-slate-900">Place gratuite</div>
+                        <div className="text-[11px] text-slate-500">(bêta fondateur)</div>
+                      </div>
+                    </label>
+
+                    <label
+                      onClick={() => setFormData({ ...formData, offre: 'fondateur' })}
+                      className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${
+                        formData.offre === 'fondateur'
+                          ? 'border-blue-600 bg-blue-50/80 text-slate-900 ring-2 ring-blue-500/20'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="offre_choice"
+                        value="fondateur"
+                        checked={formData.offre === 'fondateur'}
+                        onChange={() => setFormData({ ...formData, offre: 'fondateur' })}
+                        className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                      />
+                      <div className="ml-2.5">
+                        <div className="text-xs font-bold text-slate-900">Place à -50% à vie</div>
+                        <div className="text-[11px] text-blue-700 font-semibold">9,50 € / mois garanti</div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
                 {/* Submit button */}
                 <Button
                   type="submit"
@@ -488,7 +547,8 @@ export function WaitlistFormSection({ token, onOpenPrivacy, onOpenArtisanDashboa
                           department: '44',
                           tvaStatus: 'tva_normale',
                           problem: 'Trop long le soir, chiffrage des forfaits chaudières et TVA 10%',
-                          source: 'organique_btp'
+                          source: 'organique_btp',
+                          offre: 'fondateur'
                         });
                         setErrors({});
                       }}

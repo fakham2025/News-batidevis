@@ -95,28 +95,35 @@ export function HeroSection({
 
             {/* Subtitle in Inter */}
             <p className="font-sans text-sm sm:text-lg lg:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-normal">
-              Générez des devis conformes aux mentions obligatoires 2026 en 60 secondes, directement depuis votre téléphone sur chantier grâce aux <strong>Kits Chantier</strong> pré-chiffrés.
+              Générez des devis conformes 2026 en 60 secondes depuis votre téléphone, même hors ligne. Et bientôt : l'acompte calculé tout seul et la relance conforme en un bouton — pour ne plus jamais mendier ce que vous avez gagné.
             </p>
 
             {/* Action Group: Dual Buttons + Try Builder shortcut */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 sm:gap-4 pt-1">
-              <button
-                onClick={onScrollToWaitlist}
-                className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-heading font-bold text-base sm:text-lg flex items-center justify-center gap-3 shadow-[0_0_35px_-5px_rgba(37,99,235,0.6)] border-t border-white/20 transition-all active:scale-[0.98] cursor-pointer group min-h-[52px]"
-              >
-                <span>Rejoindre la cohorte (-50% à vie)</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
-              </button>
+            <div className="space-y-2.5 pt-1">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 sm:gap-4">
+                <button
+                  onClick={onScrollToWaitlist}
+                  className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-heading font-bold text-base sm:text-lg flex items-center justify-center gap-3 shadow-[0_0_35px_-5px_rgba(37,99,235,0.6)] border-t border-white/20 transition-all active:scale-[0.98] cursor-pointer group min-h-[52px]"
+                >
+                  <span>Rejoindre la cohorte (-50% à vie)</span>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
+                </button>
 
-              <button
-                onClick={onOpenDemo}
-                className="w-full sm:w-auto px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/90 hover:border-slate-500 font-heading font-semibold text-base flex items-center justify-center gap-2.5 backdrop-blur-md transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-black/40 min-h-[52px]"
-              >
-                <div className="w-6 h-6 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
-                  <Play className="w-3 h-3 fill-blue-400" />
-                </div>
-                <span>Voir la démo Loom (90 s)</span>
-              </button>
+                <button
+                  onClick={onOpenDemo}
+                  className="w-full sm:w-auto px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/90 hover:border-slate-500 font-heading font-semibold text-base flex items-center justify-center gap-2.5 backdrop-blur-md transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-black/40 min-h-[52px]"
+                >
+                  <div className="w-6 h-6 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+                    <Play className="w-3 h-3 fill-blue-400" />
+                  </div>
+                  <span>Voir la démo Loom (90 s)</span>
+                </button>
+              </div>
+
+              {/* Micro-ligne offre gratuite (Modif 4) */}
+              <p className="text-xs sm:text-sm text-blue-300 font-medium text-center lg:text-left">
+                🎁 Bêta gratuite pour les 20 artisans fondateurs — accès complet, sans carte bancaire.
+              </p>
             </div>
 
             {/* Mobile-first Quick Trust Badges Strip */}

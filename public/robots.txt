@@ -1,0 +1,7 @@
+# Robots.txt BâtiDevis - Logiciel devis facture artisan 2026
+User-agent: *
+Allow: /
+Allow: /comparatif/
+
+# Sitemap index
+Sitemap: https://batidevis.fr/sitemap.xml

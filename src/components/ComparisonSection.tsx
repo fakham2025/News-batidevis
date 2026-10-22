@@ -3,9 +3,10 @@ import { Sparkles, ShieldCheck, ArrowRight, Check, X } from 'lucide-react';
 
 interface ComparisonSectionProps {
   onScrollToWaitlist: () => void;
+  onNavigateToComparatif?: (slug: string) => void;
 }
 
-export function ComparisonSection({ onScrollToWaitlist }: ComparisonSectionProps) {
+export function ComparisonSection({ onScrollToWaitlist, onNavigateToComparatif }: ComparisonSectionProps) {
   const [mobileTab, setMobileTab] = useState<'ourApp' | 'others'>('ourApp');
 
   const comparisonRows = [
@@ -252,6 +253,63 @@ export function ComparisonSection({ onScrollToWaitlist }: ComparisonSectionProps
 
             </div>
 
+          </div>
+        </div>
+
+        {/* Liens vers les comparatifs SEO détaillés 2026 */}
+        <div className="mt-12 pt-8 border-t border-slate-200/80 text-center">
+          <p className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 mb-3">
+            Dossiers d'analyse comparative détaillée 2026 :
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs">
+            <a
+              href="/comparatif/quotepro"
+              onClick={(e) => {
+                if (onNavigateToComparatif) {
+                  e.preventDefault();
+                  onNavigateToComparatif('quotepro');
+                }
+              }}
+              className="px-3.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-blue-500 hover:text-blue-600 font-semibold text-slate-700 transition-all shadow-2xs"
+            >
+              BATIDEVIS vs Quotepro →
+            </a>
+            <a
+              href="/comparatif/estimapro"
+              onClick={(e) => {
+                if (onNavigateToComparatif) {
+                  e.preventDefault();
+                  onNavigateToComparatif('estimapro');
+                }
+              }}
+              className="px-3.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-blue-500 hover:text-blue-600 font-semibold text-slate-700 transition-all shadow-2xs"
+            >
+              Alternative à Estimapro →
+            </a>
+            <a
+              href="/comparatif/turbotravaux"
+              onClick={(e) => {
+                if (onNavigateToComparatif) {
+                  e.preventDefault();
+                  onNavigateToComparatif('turbotravaux');
+                }
+              }}
+              className="px-3.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-blue-500 hover:text-blue-600 font-semibold text-slate-700 transition-all shadow-2xs"
+            >
+              Turbotravaux : Prix & Avis →
+            </a>
+            <a
+              href="/comparatif/logiciel-devis-generation-automatique"
+              onClick={(e) => {
+                if (onNavigateToComparatif) {
+                  e.preventDefault();
+                  onNavigateToComparatif('logiciel-devis-generation-automatique');
+                }
+              }}
+              className="px-3.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-blue-500 hover:text-blue-600 font-semibold text-slate-700 transition-all shadow-2xs"
+            >
+              Génération automatique devis →
+            </a>
           </div>
         </div>
 

@@ -393,6 +393,18 @@ export function SolutionSection({ onOpenDemo, onScrollToWaitlist, onOpenDevisBui
           </div>
         </div>
 
+        {/* Bandeau Teaser du Cap (Modif 3) */}
+        <div className="mt-12 sm:mt-16 pt-8 border-t border-slate-200/80">
+          <div 
+            onClick={onScrollToWaitlist}
+            className="max-w-4xl mx-auto p-4 sm:p-5 rounded-2xl bg-slate-900 text-slate-300 border border-slate-800 shadow-sm cursor-pointer hover:border-slate-700 transition-colors flex items-center justify-center text-center"
+          >
+            <p className="text-xs sm:text-sm text-slate-300 font-sans leading-relaxed">
+              🔒 <strong>En préparation — Cohorte Fondateurs :</strong> l'acompte plancher calculé automatiquement sur chaque devis, et la relance conforme (intérêts moratoires, indemnité 40 €) en un bouton. Réservé aux 20 premiers.
+            </p>
+          </div>
+        </div>
+
       </div>
     </section>
   );

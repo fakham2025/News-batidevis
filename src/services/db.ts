@@ -138,6 +138,50 @@ export interface WaitlistEntry {
   quota_category: 'plomberie' | 'electricite' | 'finitions' | 'gros_oeuvre';
 }
 
+export interface Subscription {
+  id: string;
+  user_id: string;
+  email: string;
+  artisan_name: string;
+  company_name: string;
+  siret?: string;
+  trade: string;
+  plan: 'beta' | 'fondateur' | 'standard';
+  status: 'active' | 'en_attente' | 'resilie';
+  monthly_price: number; // 0 (bêta), 9.50 (fondateur), 19.00 (standard)
+  notes?: string;
+  created_at: string;
+}
+
+export interface UserSession {
+  role: 'artisan' | 'admin';
+  userEmail: string;
+  companyName: string;
+  plan: 'beta' | 'fondateur' | 'standard';
+  isLoggedIn: boolean;
+}
+
+export interface ArtisanReportingStats {
+  totalRevenueHt: number;
+  totalRevenueTtc: number;
+  pendingQuotesCount: number;
+  pendingQuotesAmount: number;
+  acceptedQuotesCount: number;
+  acceptedQuotesAmount: number;
+  paidInvoicesCount: number;
+  paidInvoicesAmount: number;
+  depositsCollected: number;
+  conversionRate: number;
+  statusDistribution: {
+    brouillon: number;
+    brouillon_local: number;
+    envoye: number;
+    accepte: number;
+    paye: number;
+    refuse: number;
+  };
+}
+
 // Clés de persistance locale offline-first
 const STORAGE_PREFIX = 'batidevis_';
 const KEY_PROFILE = `${STORAGE_PREFIX}profile`;
@@ -146,6 +190,8 @@ const KEY_CLIENTS = `${STORAGE_PREFIX}clients`;
 const KEY_KITS = `${STORAGE_PREFIX}kits`;
 const KEY_WAITLIST = `${STORAGE_PREFIX}waitlist_v2`;
 const KEY_ONLINE_MODE = `${STORAGE_PREFIX}simulated_network`;
+const KEY_SUBSCRIPTIONS = `${STORAGE_PREFIX}subscriptions`;
+const KEY_SESSION = `${STORAGE_PREFIX}current_session`;
 
 // Profil artisan par défaut (onboarding ou état initial)
 export const DEFAULT_PROFILE: Profile = {
@@ -843,6 +889,241 @@ export function getFounderCohortStats() {
       gros_oeuvre: { name: 'Gros Œuvre & Menuiserie', current: gros_oeuvre, max: maxPerCategory, remaining: Math.max(0, maxPerCategory - gros_oeuvre) },
     }
   };
+}
+
+// ============================================================================
+// CALCULS D'E-REPORTING ARTISAN & ANALYTIQUE FINANCIÈRE BTP
+// ============================================================================
+
+export function calculateArtisanReporting(docs: Document[]): ArtisanReportingStats {
+  let totalRevenueHt = 0;
+  let totalRevenueTtc = 0;
+  let pendingQuotesCount = 0;
+  let pendingQuotesAmount = 0;
+  let acceptedQuotesCount = 0;
+  let acceptedQuotesAmount = 0;
+  let paidInvoicesCount = 0;
+  let paidInvoicesAmount = 0;
+  let depositsCollected = 0;
+
+  const statusDistribution = {
+    brouillon: 0,
+    brouillon_local: 0,
+    envoye: 0,
+    accepte: 0,
+    paye: 0,
+    refuse: 0
+  };
+
+  docs.forEach(doc => {
+    // Distribution
+    if (doc.status in statusDistribution) {
+      statusDistribution[doc.status as keyof typeof statusDistribution]++;
+    }
+
+    if (doc.status === 'accepte' || doc.status === 'paye') {
+      totalRevenueHt += doc.total_ht || 0;
+      totalRevenueTtc += doc.total_ttc || 0;
+      if (doc.deposit_amount) {
+        depositsCollected += doc.deposit_amount;
+      }
+    }
+
+    if (doc.status === 'envoye' || doc.status === 'brouillon' || doc.status === 'brouillon_local') {
+      pendingQuotesCount++;
+      pendingQuotesAmount += doc.total_ttc || 0;
+    } else if (doc.status === 'accepte') {
+      acceptedQuotesCount++;
+      acceptedQuotesAmount += doc.total_ttc || 0;
+    } else if (doc.status === 'paye') {
+      paidInvoicesCount++;
+      paidInvoicesAmount += doc.total_ttc || 0;
+    }
+  });
+
+  const sentOrSigned = acceptedQuotesCount + paidInvoicesCount + statusDistribution.envoye + statusDistribution.refuse;
+  const conversionRate = sentOrSigned > 0 
+    ? Math.round(((acceptedQuotesCount + paidInvoicesCount) / sentOrSigned) * 100) 
+    : (docs.length > 0 ? 67 : 0);
+
+  return {
+    totalRevenueHt: Math.round(totalRevenueHt * 100) / 100,
+    totalRevenueTtc: Math.round(totalRevenueTtc * 100) / 100,
+    pendingQuotesCount,
+    pendingQuotesAmount: Math.round(pendingQuotesAmount * 100) / 100,
+    acceptedQuotesCount,
+    acceptedQuotesAmount: Math.round(acceptedQuotesAmount * 100) / 100,
+    paidInvoicesCount,
+    paidInvoicesAmount: Math.round(paidInvoicesAmount * 100) / 100,
+    depositsCollected: Math.round(depositsCollected * 100) / 100,
+    conversionRate,
+    statusDistribution
+  };
+}
+
+// ============================================================================
+// GESTIONNAIRE DES ABONNEMENTS SAAS (ADMIN DASHBOARD)
+// ============================================================================
+
+export const INITIAL_SUBSCRIPTIONS: Subscription[] = [
+  {
+    id: 'sub_artisan_demo',
+    user_id: 'usr_artisan_demo',
+    email: 'contact@batipro-renov.fr',
+    artisan_name: 'Stéphane BatiPro',
+    company_name: 'BatiPro Rénovation',
+    siret: '849 204 892 00018',
+    trade: 'Plomberie & Chauffage',
+    plan: 'fondateur',
+    status: 'active',
+    monthly_price: 9.50,
+    notes: 'Artisan Fondateur cohorte 1 Nantes - Feedback actif',
+    created_at: '2026-10-15T09:00:00Z'
+  },
+  {
+    id: 'sub_fnd_1',
+    user_id: 'fnd_1',
+    email: 'thierry.plomberie44@gmail.com',
+    artisan_name: 'Thierry L.',
+    company_name: 'TL Plomberie Chauffage',
+    siret: '752 918 340 00021',
+    trade: 'Plombier Chauffagiste',
+    plan: 'beta',
+    status: 'active',
+    monthly_price: 0,
+    notes: 'Accès bêta testeur gratuit activé',
+    created_at: '2026-10-16T10:14:00Z'
+  },
+  {
+    id: 'sub_fnd_2',
+    user_id: 'fnd_2',
+    email: 'laurent.elec35@orange.fr',
+    artisan_name: 'Laurent M.',
+    company_name: 'Armor Élec 35',
+    siret: '811 405 690 00014',
+    trade: 'Électricien BTP',
+    plan: 'fondateur',
+    status: 'active',
+    monthly_price: 9.50,
+    notes: 'Tarif fondateur garanti à vie 9,50€',
+    created_at: '2026-10-16T14:22:00Z'
+  },
+  {
+    id: 'sub_fnd_3',
+    user_id: 'fnd_3',
+    email: 'contact@pro-peinture49.fr',
+    artisan_name: 'Karim B.',
+    company_name: 'Pro Peinture Anjou',
+    siret: '890 123 456 00019',
+    trade: 'Peintre en bâtiment',
+    plan: 'fondateur',
+    status: 'active',
+    monthly_price: 9.50,
+    notes: 'Très intéressé par les kits m²',
+    created_at: '2026-10-17T08:45:00Z'
+  },
+  {
+    id: 'sub_fnd_4',
+    user_id: 'fnd_4',
+    email: 'alain.clim.bordeaux@gmail.com',
+    artisan_name: 'Alain V.',
+    company_name: 'Gironde Froid & Clim',
+    siret: '840 987 654 00022',
+    trade: 'Chauffagiste / CVC',
+    plan: 'standard',
+    status: 'active',
+    monthly_price: 19.00,
+    notes: 'Passage en formule standard',
+    created_at: '2026-10-17T16:05:00Z'
+  },
+  {
+    id: 'sub_fnd_5',
+    user_id: 'fnd_5',
+    email: 'sebastien.maconnerie@free.fr',
+    artisan_name: 'Sébastien D.',
+    company_name: 'Dalle & Murs Bretons',
+    siret: '802 334 112 00011',
+    trade: 'Maçon Gros Œuvre',
+    plan: 'beta',
+    status: 'active',
+    monthly_price: 0,
+    notes: 'Test intensif du mode hors ligne',
+    created_at: '2026-10-18T09:30:00Z'
+  }
+];
+
+export function getSavedSubscriptions(): Subscription[] {
+  try {
+    const raw = localStorage.getItem(KEY_SUBSCRIPTIONS);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.warn('Erreur lecture abonnements:', e);
+  }
+  saveSubscriptions(INITIAL_SUBSCRIPTIONS);
+  return INITIAL_SUBSCRIPTIONS;
+}
+
+export function saveSubscriptions(subs: Subscription[]): void {
+  try {
+    localStorage.setItem(KEY_SUBSCRIPTIONS, JSON.stringify(subs));
+  } catch (e) {
+    console.error('Erreur sauvegarde abonnements:', e);
+  }
+}
+
+export function updateSubscriptionPlan(
+  subId: string, 
+  plan: 'beta' | 'fondateur' | 'standard',
+  status?: 'active' | 'en_attente' | 'resilie'
+): Subscription[] {
+  const all = getSavedSubscriptions();
+  const prices = { beta: 0, fondateur: 9.50, standard: 19.00 };
+  
+  const updated = all.map(s => {
+    if (s.id === subId) {
+      return {
+        ...s,
+        plan,
+        monthly_price: prices[plan],
+        status: status || s.status
+      };
+    }
+    return s;
+  });
+
+  saveSubscriptions(updated);
+  return updated;
+}
+
+// ============================================================================
+// GESTIONNAIRE DE SESSION (ARTISAN vs SUPER-ADMIN)
+// ============================================================================
+
+export const DEFAULT_SESSION: UserSession = {
+  role: 'artisan',
+  userEmail: 'contact@batipro-renov.fr',
+  companyName: 'BatiPro Rénovation',
+  plan: 'fondateur',
+  isLoggedIn: true
+};
+
+export function getCurrentSession(): UserSession {
+  try {
+    const raw = localStorage.getItem(KEY_SESSION);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.warn('Erreur lecture session:', e);
+  }
+  saveCurrentSession(DEFAULT_SESSION);
+  return DEFAULT_SESSION;
+}
+
+export function saveCurrentSession(session: UserSession): void {
+  try {
+    localStorage.setItem(KEY_SESSION, JSON.stringify(session));
+  } catch (e) {
+    console.error('Erreur sauvegarde session:', e);
+  }
 }
 
 // Le script SQL complet de Supabase à afficher et copier dans l'admin

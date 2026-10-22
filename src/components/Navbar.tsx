@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { FileCheck2, Menu, X, ArrowRight, ShieldCheck, Play, Sparkles, Smartphone } from 'lucide-react';
+import { FileCheck2, Menu, X, ArrowRight, ShieldCheck, Play, Sparkles, Smartphone, BarChart3, Shield } from 'lucide-react';
 import { getFounderCohortStats } from '../services/db';
 import { PWAInstallButton } from './PWAInstallButton';
 
@@ -13,9 +13,11 @@ interface NavbarProps {
   onOpenDevisBuilder?: () => void;
   onOpenOnboarding?: () => void;
   onOpenDeployGuide?: () => void;
+  onOpenArtisanDashboard?: () => void;
+  onOpenAdmin?: () => void;
 }
 
-export function Navbar({ onOpenDemo, onOpenDevisBuilder, onOpenOnboarding }: NavbarProps) {
+export function Navbar({ onOpenDemo, onOpenDevisBuilder, onOpenOnboarding, onOpenArtisanDashboard, onOpenAdmin }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showMobileBottomBar, setShowMobileBottomBar] = useState(false);
@@ -128,21 +130,31 @@ export function Navbar({ onOpenDemo, onOpenDevisBuilder, onOpenOnboarding }: Nav
             <div className="hidden sm:flex items-center gap-2.5">
               <PWAInstallButton variant="navbar" />
 
+              {onOpenArtisanDashboard && (
+                <button
+                  onClick={onOpenArtisanDashboard}
+                  className="px-3.5 py-2 text-xs font-heading font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-blue-600/25"
+                >
+                  <BarChart3 className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Mon Espace Artisan</span>
+                </button>
+              )}
+
               {onOpenDevisBuilder && (
                 <button
                   onClick={onOpenDevisBuilder}
                   className="px-3.5 py-2 text-xs font-heading font-semibold text-slate-200 hover:text-white bg-slate-900 border border-slate-700/80 rounded-xl hover:border-blue-500 transition-all cursor-pointer flex items-center gap-1.5"
                 >
                   <Smartphone className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Tester le DevisBuilder</span>
+                  <span>DevisBuilder</span>
                 </button>
               )}
 
               <button
                 onClick={() => scrollToSection('waitlist')}
-                className="px-4 py-2 text-xs font-heading font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/30 rounded-xl transition-all cursor-pointer"
+                className="px-3.5 py-2 text-xs font-heading font-semibold text-slate-300 hover:text-white bg-slate-900 border border-slate-700/80 rounded-xl transition-all cursor-pointer"
               >
-                Accès Fondateur -50%
+                Accès -50%
               </button>
             </div>
 
@@ -201,6 +213,18 @@ export function Navbar({ onOpenDemo, onOpenDevisBuilder, onOpenOnboarding }: Nav
             
             <div className="pt-2 flex flex-col gap-2.5">
               <PWAInstallButton variant="banner" className="mb-1" />
+              {onOpenArtisanDashboard && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onOpenArtisanDashboard();
+                  }}
+                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-heading font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-600/30"
+                >
+                  <BarChart3 className="w-4 h-4 text-amber-300" />
+                  <span>Mon Espace Artisan & e-Reporting</span>
+                </button>
+              )}
               {onOpenDevisBuilder && (
                 <button
                   onClick={() => {

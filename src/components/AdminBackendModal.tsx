@@ -23,7 +23,11 @@ import {
   LogOut,
   ShieldAlert,
   Clock,
-  Sparkles
+  Sparkles,
+  CreditCard,
+  TrendingUp,
+  UserCheck,
+  Coins
 } from 'lucide-react';
 import { 
   googleSignIn, 
@@ -49,7 +53,10 @@ import {
   getSavedWaitlist, 
   saveWaitlist, 
   getFounderCohortStats, 
-  WaitlistEntry 
+  WaitlistEntry,
+  getSavedSubscriptions,
+  updateSubscriptionPlan,
+  Subscription
 } from '../services/db';
 
 interface AdminBackendModalProps {
@@ -83,7 +90,8 @@ export function AdminBackendModal({
   const [pinChangeMsg, setPinChangeMsg] = useState<string | null>(null);
 
   // Admin Dashboard states
-  const [activeTab, setActiveTab] = useState<'cohort' | 'supabase' | 'leads' | 'webhook' | 'config'>('cohort');
+  const [activeTab, setActiveTab] = useState<'subscriptions' | 'cohort' | 'supabase' | 'leads' | 'webhook' | 'config'>('subscriptions');
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [cohortEntries, setCohortEntries] = useState<WaitlistEntry[]>([]);
   const [copiedSql, setCopiedSql] = useState(false);
   const [leads, setLeads] = useState<WaitlistRecord[]>([]);
@@ -186,6 +194,7 @@ export function AdminBackendModal({
     const local = getLocalLeads();
     setLeads(local);
     setCohortEntries(getSavedWaitlist());
+    setSubscriptions(getSavedSubscriptions());
 
     const config = getSavedSpreadsheetConfig();
     const activeId = config.id || DEFAULT_SPREADSHEET_ID;
@@ -195,6 +204,42 @@ export function AdminBackendModal({
     setCurrentSheetUrl(activeUrl);
     setCustomSheetUrl(activeUrl);
     if (config.webhookUrl) setCustomWebhookUrl(config.webhookUrl);
+  };
+
+  const handleUpdateSubscription = (
+    subId: string, 
+    plan: 'beta' | 'fondateur' | 'standard',
+    status?: 'active' | 'en_attente' | 'resilie'
+  ) => {
+    const updated = updateSubscriptionPlan(subId, plan, status);
+    setSubscriptions(updated);
+    setMsgSuccess("Abonnement mis à jour avec succès !");
+    setTimeout(() => setMsgSuccess(null), 3000);
+  };
+
+  const handleExportSubscriptionsCSV = () => {
+    if (subscriptions.length === 0) return;
+    const headers = ["ID", "Email", "Artisan", "Entreprise", "SIRET", "Métier", "Plan", "Statut", "Prix Mensuel", "Notes", "Date"];
+    const rows = subscriptions.map(s => [
+      `"${s.id}"`,
+      `"${s.email}"`,
+      `"${s.artisan_name}"`,
+      `"${s.company_name}"`,
+      `"${s.siret || ''}"`,
+      `"${s.trade}"`,
+      `"${s.plan}"`,
+      `"${s.status}"`,
+      `"${s.monthly_price.toFixed(2)} €"`,
+      `"${(s.notes || '').replace(/"/g, '""')}"`,
+      `"${s.created_at}"`
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `batidevis_abonnements_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleToggleBetaPlan = (id: string) => {
@@ -843,6 +888,18 @@ function handleLead(e) {
             {/* Navigation Tabs */}
             <div className="px-5 sm:px-7 pt-4 border-b border-slate-200 flex gap-2 flex-wrap">
               <button
+                onClick={() => setActiveTab('subscriptions')}
+                className={`pb-3 px-3 text-xs font-heading font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'subscriptions'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>Abonnements & SaaS MRR ({subscriptions.length})</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              </button>
+              <button
                 onClick={() => setActiveTab('cohort')}
                 className={`pb-3 px-3 text-xs font-heading font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'cohort'
@@ -905,6 +962,150 @@ function handleLead(e) {
 
             {/* Content Body */}
             <div className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-6">
+              {/* ONGLET 0 : GESTION DES ABONNEMENTS ET MRR SAAS */}
+              {activeTab === 'subscriptions' && (
+                <div className="space-y-6 text-left">
+                  {/* SaaS Metrics Strip */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="bg-slate-900 text-white p-4 rounded-2xl border border-slate-800 space-y-1">
+                      <div className="flex items-center justify-between text-slate-400 text-xs">
+                        <span>Revenu Récurrent (MRR)</span>
+                        <TrendingUp className="w-4 h-4 text-emerald-400" />
+                      </div>
+                      <div className="font-mono text-2xl font-extrabold text-emerald-400 tabular-nums">
+                        {subscriptions.filter(s => s.status === 'active').reduce((acc, s) => acc + s.monthly_price, 0).toFixed(2)} € /mois
+                      </div>
+                      <p className="text-[11px] text-slate-400">
+                        {subscriptions.filter(s => s.status === 'active').length} abonnement(s) actif(s)
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1">
+                      <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+                        <span>Bêta Testeurs (0€)</span>
+                        <UserCheck className="w-4 h-4 text-blue-500" />
+                      </div>
+                      <div className="font-mono text-2xl font-extrabold text-slate-900 tabular-nums">
+                        {subscriptions.filter(s => s.plan === 'beta').length}
+                      </div>
+                      <p className="text-[11px] text-slate-500">
+                        Accès gratuit cohorte de test
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1">
+                      <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+                        <span>Fondateurs (9,50€/m)</span>
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                      </div>
+                      <div className="font-mono text-2xl font-extrabold text-amber-700 tabular-nums">
+                        {subscriptions.filter(s => s.plan === 'fondateur').length}
+                      </div>
+                      <p className="text-[11px] text-slate-500">
+                        Tarif -50% garanti à vie
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1">
+                      <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+                        <span>Standard (19€/m)</span>
+                        <CreditCard className="w-4 h-4 text-purple-500" />
+                      </div>
+                      <div className="font-mono text-2xl font-extrabold text-purple-700 tabular-nums">
+                        {subscriptions.filter(s => s.plan === 'standard').length}
+                      </div>
+                      <p className="text-[11px] text-slate-500">
+                        Plein tarif post-lancement
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Actions Bar */}
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                      <h4 className="font-heading font-bold text-sm text-slate-900">
+                        Gestionnaire des Abonnements Artisans ({subscriptions.length})
+                      </h4>
+                      <p className="text-xs text-slate-500">
+                        Changez le plan d'un artisan en 1 clic pour activer ou suspendre ses droits d'accès.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleExportSubscriptionsCSV}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Exporter Abonnements CSV</span>
+                    </button>
+                  </div>
+
+                  {/* Subscriptions Table */}
+                  <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-100 border-b border-slate-200 font-heading font-bold text-slate-700 uppercase tracking-wider text-[11px]">
+                          <tr>
+                            <th className="py-2.5 px-3">Artisan & Entreprise</th>
+                            <th className="py-2.5 px-3">Corps d'état</th>
+                            <th className="py-2.5 px-3">Formule / Plan</th>
+                            <th className="py-2.5 px-3 text-right">Tarif / mois</th>
+                            <th className="py-2.5 px-3 text-center">Statut</th>
+                            <th className="py-2.5 px-3">Notes Internes</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-sans">
+                          {subscriptions.map((sub) => (
+                            <tr key={sub.id} className="hover:bg-slate-50/80 transition">
+                              <td className="py-2.5 px-3">
+                                <div className="font-bold text-slate-900">{sub.company_name}</div>
+                                <div className="text-[11px] text-slate-500 font-mono">{sub.email}</div>
+                              </td>
+                              <td className="py-2.5 px-3 font-medium text-slate-700">
+                                {sub.trade}
+                              </td>
+                              <td className="py-2.5 px-3">
+                                <select
+                                  value={sub.plan}
+                                  onChange={(e) => handleUpdateSubscription(sub.id, e.target.value as any)}
+                                  className="px-2 py-1 rounded-lg border border-slate-300 bg-white font-bold text-xs text-blue-900"
+                                >
+                                  <option value="beta">Bêta (0 €)</option>
+                                  <option value="fondateur">Fondateur (9,50 €)</option>
+                                  <option value="standard">Standard (19,00 €)</option>
+                                </select>
+                              </td>
+                              <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900">
+                                {sub.monthly_price.toFixed(2)} €
+                              </td>
+                              <td className="py-2.5 px-3 text-center">
+                                <select
+                                  value={sub.status}
+                                  onChange={(e) => handleUpdateSubscription(sub.id, sub.plan, e.target.value as any)}
+                                  className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
+                                    sub.status === 'active' 
+                                      ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
+                                      : 'bg-amber-50 text-amber-800 border-amber-300'
+                                  }`}
+                                >
+                                  <option value="active">Actif</option>
+                                  <option value="en_attente">En attente</option>
+                                  <option value="resilie">Résilié</option>
+                                </select>
+                              </td>
+                              <td className="py-2.5 px-3 text-[11px] text-slate-500 max-w-xs truncate">
+                                {sub.notes || '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* ONGLET 1 : COHORTE FONDATEURS */}
               {activeTab === 'cohort' && (
                 <div className="space-y-5 text-left">

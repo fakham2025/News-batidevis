@@ -17,8 +17,16 @@ import {
   Users 
 } from 'lucide-react';
 import { Button } from './ui/Button';
-import { dispatchLeadToBackend, saveLocalLead, WaitlistRecord } from '../services/googleSheets';
-import { addWaitlistEntry, getFounderCohortStats } from '../services/db';
+import { 
+  addWaitlistEntry, 
+  getFounderCohortStats,
+  saveProfile,
+  getSavedProfile,
+  saveCurrentSession,
+  getSavedSubscriptions,
+  saveSubscriptions,
+  Subscription
+} from '../services/db';
 
 interface FormData {
   firstName: string;
@@ -40,9 +48,10 @@ interface FormErrors {
 interface WaitlistFormSectionProps {
   token?: string | null;
   onOpenPrivacy?: () => void;
+  onOpenArtisanDashboard?: () => void;
 }
 
-export function WaitlistFormSection({ token, onOpenPrivacy }: WaitlistFormSectionProps) {
+export function WaitlistFormSection({ token, onOpenPrivacy, onOpenArtisanDashboard }: WaitlistFormSectionProps) {
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     email: '',
@@ -131,28 +140,48 @@ export function WaitlistFormSection({ token, onOpenPrivacy }: WaitlistFormSectio
       metier: formData.trade,
       departement: formData.department.trim(),
       statut_tva: formData.tvaStatus,
-      probleme: formData.problem.trim() || 'Non précisé',
+      probleme: enrichedProblem,
       source: formData.source
     });
 
-    // 2. Préparation du lead pour Google Sheets et Webhook temps réel
-    const record: WaitlistRecord = {
-      id: `fnd_${Date.now()}`,
-      date: nowFormatted,
-      firstName: formData.firstName.trim(),
+    // 1b. Mise à jour automatique de la session artisan & profil
+    const currentProfile = getSavedProfile();
+    const companyDisplayName = formData.firstName.includes('(') ? formData.firstName : `Entreprise ${formData.firstName}`;
+    const updatedProfile = {
+      ...currentProfile,
+      company_name: companyDisplayName,
       email: formData.email.trim(),
       trade: formData.trade,
-      problem: enrichedProblem,
-      vipCode: 'FONDATEUR50',
-      status: 'Fondateur Bêta (-50%)'
+      is_tva_subject: formData.tvaStatus === 'tva_normale'
     };
+    saveProfile(updatedProfile);
 
-    saveLocalLead(record);
-    dispatchLeadToBackend(record, token).catch((err) => {
-      console.warn('Dispatch lead notice:', err);
+    saveCurrentSession({
+      role: 'artisan',
+      userEmail: formData.email.trim(),
+      companyName: companyDisplayName,
+      plan: 'fondateur',
+      isLoggedIn: true
     });
 
-    // Rafraîchir les stats de cohorte
+    // 1c. Ajout de la souscription active dans le Super-Dashboard Admin
+    const subs = getSavedSubscriptions();
+    const newSub: Subscription = {
+      id: `sub_${Date.now()}`,
+      user_id: `usr_${Date.now()}`,
+      email: formData.email.trim(),
+      artisan_name: formData.firstName.trim(),
+      company_name: companyDisplayName,
+      trade: formData.trade,
+      plan: 'fondateur',
+      status: 'active',
+      monthly_price: 9.50,
+      notes: `Inscrit via formulaire cohorte (Dép: ${formData.department})`,
+      created_at: new Date().toISOString()
+    };
+    saveSubscriptions([newSub, ...subs]);
+
+    // 2. Rafraîchir les statistiques de cohorte en temps réel
     setCohortStats(getFounderCohortStats());
 
     // 3. Affichage immédiat du succès
@@ -531,13 +560,25 @@ export function WaitlistFormSection({ token, onOpenPrivacy }: WaitlistFormSectio
                 </div>
 
                 <div className="text-xs text-slate-500 leading-relaxed font-sans">
-                  Un email de confirmation vient d'être envoyé à <strong className="text-slate-800">{formData.email}</strong>. Notre équipe vous contactera sous 48h pour finaliser votre activation bêta.
+                  Un email de confirmation vient d'être envoyé à <strong className="text-slate-800">{formData.email}</strong>. Vos accès immédiats sont configurés.
                 </div>
+
+                {/* Bouton direct vers le Dashboard Artisan & e-reporting */}
+                {onOpenArtisanDashboard && (
+                  <button
+                    type="button"
+                    onClick={onOpenArtisanDashboard}
+                    className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 transition cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                    <span>Accéder à mon Espace Artisan & Tableau de bord →</span>
+                  </button>
+                )}
 
                 <button
                   type="button"
                   onClick={() => setIsSuccess(false)}
-                  className="text-xs text-blue-600 hover:underline font-semibold"
+                  className="text-xs text-blue-600 hover:underline font-semibold block mx-auto"
                 >
                   Inscrire un confrère artisan
                 </button>

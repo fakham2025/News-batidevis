@@ -1,6 +1,6 @@
 {
-  "summary":  "Feuille de route détaillée en 4 étapes pour l'approfondissement du DevisBuilder (personnalisation logo, multi-TVA, remises, acomptes 30%) et l'activation PWA installable mobile 100% hors-ligne (Service Worker, bouton in-app Android/iOS et détection réseau).",
-  "updatedAt":  "2026-10-20T14:47:50.695645803Z",
+  "summary":  "Plan de développement complet pour l'Espace Artisan (dashboard e-reporting, gestion des devis, paramètres entreprise, DevisBuilder) et le Super-Dashboard Administrateur SaaS (pilotage des abonnements, profils artisans, quotas métiers et métriques globales).",
+  "updatedAt":  "2026-10-20T16:01:59.312053854Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

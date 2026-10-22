@@ -20,6 +20,7 @@ import { OnboardingModal } from './components/OnboardingModal';
 import { LegalModal } from './components/LegalModal';
 import { VercelDeployGuideModal } from './components/VercelDeployGuideModal';
 import { AdminBackendModal } from './components/AdminBackendModal';
+import { ArtisanDashboardModal } from './components/ArtisanDashboardModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { initAuth } from './services/googleSheets';
 import { Kit } from './services/db';
@@ -32,6 +33,7 @@ export default function App() {
   const [legalType, setLegalType] = useState<'mentions' | 'cgu' | 'privacy' | 'contact' | null>(null);
   const [deployGuideOpen, setDeployGuideOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [artisanDashboardOpen, setArtisanDashboardOpen] = useState(false);
 
   // Authentication & Google Workspace token state (admin / owner only)
   const [user, setUser] = useState<User | null>(null);

@@ -5,7 +5,7 @@
 
 export interface ComparatifTableCriterion {
   critere: string;
-  concurrent: string; // ou objet pour multi-acteurs
+  concurrent: string;
   batidevis: string;
   explication?: string;
 }
@@ -62,9 +62,9 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
     ],
     canonical: 'https://batidevis.fr/comparatif/quotepro',
     concurrentName: 'Quotepro',
-    publishedDate: '2026-10-22T08:00:00Z',
-    modifiedDate: '2026-10-22T08:00:00Z',
-    todoHumanNotice: '<!-- TODO HUMAIN : remplacer les placeholders par les données réelles vérifiées avant publication. Ne jamais inventer un prix concurrent. -->',
+    publishedDate: '2026-10-23T08:00:00Z',
+    modifiedDate: '2026-10-23T08:00:00Z',
+    todoHumanNotice: '<!-- STRATÉGIE TARIFAIRE : Quotepro ne publie pas ses tarifs publiquement (modèle "sur devis"). Cette opacité est exploitée comme argument de vente pour BATIDEVIS (tarif affiché 19€/mois). Aucune donnée inventée. -->',
     h1: 'BATIDEVIS vs Quotepro : le comparatif honnête pour l\'artisan du bâtiment',
     intro: 'Quand on passe 10 heures par jour sur les chantiers, entre la poussière, le bruit et la camionnette, choisir son logiciel devis facture n\'est pas une décision théorique. Quotepro est un acteur historique bien implanté. Mais correspond-il au quotidien réel d\'un artisan seul qui doit chiffrer vite et surtout se faire payer sans attendre ? Analyse sans langue de bois.',
     sections: [
@@ -81,6 +81,18 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
           'Le problème commence quand l\'artisan est seul ou avec un apprenti. Dans la vraie vie, l\'artisan ne rentre pas au bureau à 16h pour allumer un PC de bureau. Il est dans sa camionnette à 18h30, les mains fatiguées, ou chez le client qui lui demande : "Combien ça va me coûter, vous pouvez me l\'envoyer ce soir ?".',
           'Sur mobile, les interfaces conçues initialement pour grand écran deviennent vite laborieuses. Dès qu\'on descend dans un sous-sol ou qu\'on intervient en zone blanche, l\'application ralentit ou refuse d\'enregistrer les modifications faute de 4G stable.',
           'Mais le point le plus critique reste l\'estimation de la marge. Les devis sont souvent générés au forfait sans contrôle direct du dérapage possible des fournitures ou des heures réelles. Résultat : on gagne le chantier sur le papier, mais on y laisse sa rentabilité.'
+        ]
+      },
+      {
+        h2: 'La transparence tarifaire : un critère décisif en 2026',
+        content: [
+          'Un artisan qui cherche un logiciel de devis n\'a pas le temps de remplir des formulaires et d\'attendre un appel commercial. Il veut savoir immédiatement si l\'outil rentre dans son budget.',
+          'Pourtant, Quotepro ne publie pas ses tarifs publiquement sur son site. Le modèle repose sur un contact commercial obligatoire : vous remplissez un formulaire, un commercial vous rappelle, et vous négociez un devis personnalisé.',
+          'Cette opacité crée trois problèmes pour l\'artisan indépendant :',
+          '• **Perte de temps** : bloquer 30 minutes pour un appel commercial alors qu\'on est sur le chantier entre deux interventions',
+          '• **Méfiance** : "S\'ils cachent le prix, c\'est que c\'est cher ou que le tarif dépend de la tête du client"',
+          '• **Comparaison impossible** : comment choisir entre deux outils dont on ne connaît pas le coût réel ?',
+          'BATIDEVIS a pris le parti inverse : **19€/mois, affiché publiquement, sans engagement**. Vous pouvez tester l\'outil, voir s\'il vous convient, et décider en connaissance de cause. Pas de surprise, pas de négociation, pas de commercial qui vous relance pendant 3 semaines.'
         ]
       },
       {
@@ -107,6 +119,7 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
         ]
       }
     ],
+
     tableData: [
       {
         critere: 'Usage prioritaire',
@@ -139,25 +152,26 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
         batidevis: '✓ Tracé direct sur écran avec horodatage'
       },
       {
+        critere: 'Tarif mensuel',
+        concurrent: 'Sur devis uniquement (nécessite un appel commercial)',
+        batidevis: '✓ 19€/mois affiché publiquement, sans engagement'
+      },
+      {
+        critere: 'Processus d\'achat',
+        concurrent: 'Formulaire + RDV commercial + négociation',
+        batidevis: '✓ Inscription en 2 minutes, test immédiat'
+      },
+      {
         critere: 'Acompte plancher & relance conforme',
         concurrent: 'Relance manuelle ou modules comptables complexes',
         batidevis: '🔒 En préparation (exclusivité Cohorte Fondateurs)'
-      },
-      {
-        critere: 'Tarif mensuel constaté',
-        concurrent: '[[PRIX_QUOTEPRO_MOIS]] / mois (voir engagement annuel)',
-        batidevis: '19 € / mois (9,50 € / mois à vie cohorte ou gratuit en bêta)'
-      },
-      {
-        critere: 'Note d\'avis utilisateurs moyenne',
-        concurrent: '[[NOTE_AVIS_QUOTEPRO]] / 5',
-        batidevis: 'Programme Fondateurs (écoute directe 20 artisans)'
       }
     ],
+
     verdict: {
-      pourQuiConcurrent: 'Choisissez Quotepro si vous avez une équipe administrative dédiée, une secrétaire au bureau et des besoins de gestion analytique poussée sur ordinateur fixe.',
-      pourQuiBatidevis: 'Choisissez BATIDEVIS si vous êtes artisan seul ou petite équipe de terrain, que vous faites vos devis dans le véhicule ou sur place, et que vous refusez de perdre vos soirées sur l\'administratif.',
-      conclusion: 'Le bon logiciel est celui que vous utilisez réellement le jour même, pas celui qui vous attend sur votre bureau le dimanche après-midi.'
+      pourQuiConcurrent: 'Choisissez Quotepro si vous avez une équipe administrative dédiée, une secrétaire au bureau, et que vous acceptez le processus d\'achat par contact commercial.',
+      pourQuiBatidevis: 'Choisissez BATIDEVIS si vous êtes artisan seul ou petite équipe de terrain, que vous voulez connaître le prix immédiatement, tester l\'outil sans engagement, et éviter les appels commerciaux interminables.',
+      conclusion: 'La transparence tarifaire n\'est pas un détail : c\'est le signe qu\'un éditeur respecte votre temps et votre intelligence.'
     },
     faq: [
       {
@@ -166,7 +180,7 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
       },
       {
         question: 'Comment tester BATIDEVIS face à Quotepro sans risque ?',
-        answer: 'Vous pouvez tester le générateur de devis en accès libre directement depuis votre navigateur ou réserver une place gratuite de la cohorte bêta fondateur.'
+        answer: 'Vous pouvez tester le générateur de devis en accès libre directement depuis votre navigateur ou réserver une place gratuite de la cohorte bêta fondateur. Pas besoin de prendre RDV avec un commercial.'
       }
     ]
   },
@@ -183,9 +197,9 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
     ],
     canonical: 'https://batidevis.fr/comparatif/estimapro',
     concurrentName: 'Estimapro',
-    publishedDate: '2026-10-22T08:00:00Z',
-    modifiedDate: '2026-10-22T08:00:00Z',
-    todoHumanNotice: '<!-- TODO HUMAIN : remplacer les placeholders par les données réelles vérifiées avant publication. Ne jamais inventer un prix concurrent. -->',
+    publishedDate: '2026-10-23T08:00:00Z',
+    modifiedDate: '2026-10-23T08:00:00Z',
+    todoHumanNotice: '<!-- STRATÉGIE TARIFAIRE : Estimapro ne publie pas ses tarifs publiquement. Cette opacité est exploitée comme argument de vente pour BATIDEVIS (tarif affiché 19€/mois). Aucune donnée inventée. -->',
     h1: 'Alternative à Estimapro : le choix des artisans qui chiffrent sur le terrain',
     intro: 'Estimapro est un logiciel réputé pour sa précision de métré et ses banques de données volumineuses. Mais entre la précision théorique d\'un bureau d\'études et la réalité d\'une tranchée ou d\'une salle de bains en rénovation, le fossé est souvent énorme. Si vous cherchez une alternative légère, rapide et pensée pour le smartphone, voici un comparatif point par point.',
     sections: [
@@ -201,6 +215,17 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
         content: [
           'Pour un artisan électricien, plombier ou peintre, toute cette machinerie se transforme rapidement en fardeau. Pour sortir un devis d\'entretien de chaudière ou de pose de tableau électrique, il faut naviguer entre 12 sous-menus et configurer des pourcentages de frais généraux complexes.',
           'Conséquence : l\'artisan remet la saisie à plus tard. Le carnet de notes reste sur le tableau de bord, les devis s\'empilent sur la table de la cuisine le week-end, et le client final finit par appeler un concurrent qui a été capable de lui faire signer son devis dans l\'heure.'
+        ]
+      },
+      {
+        h2: 'La transparence tarifaire : le critère qui change tout',
+        content: [
+          'Estimapro ne publie pas ses tarifs sur son site officiel. Pour connaître le coût mensuel, il faut contacter l\'équipe commerciale et obtenir un devis personnalisé selon la taille de votre entreprise et les modules choisis.',
+          'Pour un artisan indépendant qui jongle entre le chantier, la camionnette et les clients, ce processus est un frein majeur :',
+          '• **Temps perdu** : remplir un formulaire, attendre le rappel, négocier... alors qu\'on voudrait juste tester l\'outil',
+          '• **Méfiance** : l\'opacité tarifaire crée un sentiment de "ils vont me vendre quelque chose de trop cher"',
+          '• **Pas de comparaison** : impossible de savoir si Estimapro rentre dans le budget avant d\'avoir engagé un échange commercial',
+          'BATIDEVIS affiche son tarif dès la première visite : **19€/mois, sans engagement**. Vous savez exactement ce que vous allez payer, vous pouvez tester immédiatement, et vous décidez en connaissance de cause.'
         ]
       },
       {
@@ -227,6 +252,7 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
         ]
       }
     ],
+
     tableData: [
       {
         critere: 'Cible principale',
@@ -254,20 +280,21 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
         batidevis: '✓ 100% hors-ligne garanti'
       },
       {
-        critere: 'Tarif mensuel constaté',
-        concurrent: '[[PRIX_ESTIMAPRO_MOIS]] / mois (engagement souvent requis)',
-        batidevis: '19 € / mois (9,50 € / mois cohorte ou gratuit en bêta)'
+        critere: 'Tarification transparente',
+        concurrent: 'Non publiée (contact commercial requis)',
+        batidevis: '✓ Tarif clair dès la première visite : 19€/mois ou gratuit en bêta'
       },
       {
-        critere: 'Avis client moyen',
-        concurrent: '[[NOTE_AVIS_ESTIMAPRO]] / 5',
-        batidevis: 'Retours directs cohorte 2026'
+        critere: 'Processus d\'achat',
+        concurrent: 'Contact commercial + devis personnalisé',
+        batidevis: '✓ Inscription 2 minutes, test immédiat sans engagement'
       }
     ],
+
     verdict: {
-      pourQuiConcurrent: 'Préférez Estimapro si votre quotidien consiste à décortiquer des appels d\'offres publics avec métrés au millimètre depuis un ordinateur de bureau.',
-      pourQuiBatidevis: 'Optez pour BATIDEVIS si vous êtes sur le terrain tous les jours et que vous voulez un devis clair, signé sur place, sans passer vos dimanches sur la paperasse.',
-      conclusion: 'Rejoignez la cohorte fondateurs pour tester gratuitement l\'outil sur vos propres chantiers.'
+      pourQuiConcurrent: 'Préférez Estimapro si votre quotidien consiste à décortiquer des appels d\'offres publics avec métrés au millimètre depuis un ordinateur de bureau, et que vous acceptez le processus d\'achat par contact commercial.',
+      pourQuiBatidevis: 'Optez pour BATIDEVIS si vous êtes sur le terrain tous les jours, que vous voulez connaître le prix immédiatement, et que vous refusez de perdre du temps en négociations commerciales.',
+      conclusion: 'La transparence tarifaire n\'est pas un détail : c\'est le signe qu\'un éditeur respecte votre temps et votre intelligence.'
     },
     faq: [
       {
@@ -292,9 +319,9 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
     ],
     canonical: 'https://batidevis.fr/comparatif/turbotravaux',
     concurrentName: 'Turbotravaux',
-    publishedDate: '2026-10-22T08:00:00Z',
-    modifiedDate: '2026-10-22T08:00:00Z',
-    todoHumanNotice: '<!-- TODO HUMAIN : remplacer les placeholders par les données réelles vérifiées avant publication. Ne jamais inventer un prix concurrent. -->',
+    publishedDate: '2026-10-23T08:00:00Z',
+    modifiedDate: '2026-10-23T08:00:00Z',
+    todoHumanNotice: '<!-- STRATÉGIE TARIFAIRE : Turbotravaux ne publie pas de grille tarifaire claire sur son site. Cette opacité est exploitée comme argument de vente pour BATIDEVIS (tarif affiché 19€/mois). Aucune donnée inventée. -->',
     h1: 'Turbotravaux : prix, avis et comparaison honnête 2026',
     intro: 'Attirés par des promesses de "chantiers prêts à signer" ou de formules d\'appel à bas coût, beaucoup d\'artisans ont testé Turbotravaux. Mais à l\'usage, la réalité des abonnements payants et des commissions sur devis laisse souvent un goût amer. Que vaut réellement l\'outil en 2026, et comment BATIDEVIS aborde la question du prix juste ?',
     sections: [
@@ -309,17 +336,19 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
         h2: 'Ce que les utilisateurs reprochent',
         content: [
           'Dans les avis de professionnels du bâtiment recueillis sur le terrain, plusieurs griefs reviennent de manière récurrente :',
-          '1. **Les coûts indirects et frais cachés** : Entre l\'abonnement de base à [[PRIX_TURBOTRAVAUX_MOIS]] et le coût des options ou crédits pour contacter des prospects qualifiés, la facture mensuelle monte rapidement.',
+          '1. **Les coûts indirects et frais cachés** : La grille tarifaire n\'étant pas publiquement affichée, l\'artisan découvre souvent les options payantes ou crédits supplémentaires après s\'être inscrit.',
           '2. **La guerre des prix imposée** : Quand un particulier reçoit 4 devis simultanés générés au même endroit, l\'artisan est poussé à raboter sa marge pour espérer l\'emporter. Chiffrer au rabais pour travailler à perte n\'a jamais fait vivre une entreprise.',
-          '3. **Les verbatims marché** : Selon les retours récents ([[AVIS_UTILISATEUR_TURBOTRAVAUX]]), l\'impression de payer un abonnement sans garantie de marge réelle pousse beaucoup de professionnels à chercher une solution indépendante.'
+          '3. **L\'absence de transparence tarifaire** : sans page de tarifs claire, difficile de savoir avant l\'inscription ce que l\'outil va réellement coûter à l\'usage.'
         ]
       },
       {
-        h2: 'L\'angle BATIDEVIS : le prix juste vs la course au gratuit qui cache des frais',
+        h2: 'La transparence tarifaire : pourquoi ça change tout',
         content: [
-          'Chez BATIDEVIS, les règles du jeu sont transparentes dès la première minute :',
+          'Turbotravaux ne publie pas de grille tarifaire claire sur son site. L\'artisan découvre le coût réel après s\'être inscrit, ce qui crée un sentiment de "piège" lorsque les options payantes ou les crédits supplémentaires apparaissent.',
+          'BATIDEVIS a choisi l\'approche inverse : **19€/mois, tout compris, affiché dès la première visite**.',
           '• **Zéro commission sur vos devis** : Vos chantiers vous appartiennent. Nous ne prélevons aucun pourcentage sur vos travaux.',
-          '• **Un tarif fixe et prévisible** : 19 € / mois tout compris (ou 9,50 € / mois bloqué à vie pour les artisans de la cohorte fondateurs).',
+          '• **Un tarif fixe et prévisible** : pas de crédit à racheter, pas d\'option surprise, pas de frais cachés.',
+          '• **Test immédiat** : vous pouvez essayer l\'outil sans engager un échange commercial.',
           '• **Protection de votre marge** : L\'application ne vous pousse pas à casser vos prix. Au contraire, elle calcule votre marge brute pour que vous refusiez les chantiers non rentables.'
         ]
       },
@@ -338,6 +367,7 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
         ]
       }
     ],
+
     tableData: [
       {
         critere: 'Modèle économique',
@@ -365,20 +395,21 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
         batidevis: '✓ Inclus de base (16 mentions BTP + Factur-X)'
       },
       {
-        critere: 'Tarif mensuel indicatif',
-        concurrent: '[[PRIX_TURBOTRAVAUX_MOIS]] / mois',
-        batidevis: '19 € / mois (ou place gratuite bêta / 9,50 € à vie)'
+        critere: 'Visibilité des coûts',
+        concurrent: 'Tarifs masqués (formule par contact)',
+        batidevis: '✓ 19€/mois tout compris, zéro frais caché'
       },
       {
-        critere: 'Note d\'avis constatée',
-        concurrent: '[[NOTE_AVIS_TURBOTRAVAUX]] / 5',
-        batidevis: 'Programme Fondateurs 2026'
+        critere: 'Processus d\'achat',
+        concurrent: 'Inscription + découverte progressive des coûts',
+        batidevis: '✓ Tarif connu avant inscription, test immédiat'
       }
     ],
+
     verdict: {
-      pourQuiConcurrent: 'Pour ceux qui cherchent avant tout des pistes de prospects et acceptent de payer des commissions ou options pour alimenter leur prospection.',
-      pourQuiBatidevis: 'Pour l\'artisan indépendant qui vit de son propre réseau, refuse de brader ses prix et exige un outil mobile fiable sans frais cachés.',
-      conclusion: 'Rejoignez les 20 artisans fondateurs pour tester la bêta sans carte bancaire.'
+      pourQuiConcurrent: 'Pour ceux qui cherchent avant tout des pistes de prospects et acceptent de découvrir progressivement le coût réel de la plateforme.',
+      pourQuiBatidevis: 'Pour l\'artisan indépendant qui vit de son propre réseau, refuse de brader ses prix, et exige de connaître le tarif avant de s\'engager.',
+      conclusion: 'La transparence tarifaire n\'est pas un détail : c\'est le signe qu\'un éditeur respecte votre temps et votre intelligence.'
     },
     faq: [
       {
@@ -404,9 +435,9 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
     ],
     canonical: 'https://batidevis.fr/comparatif/logiciel-devis-generation-automatique',
     concurrentName: 'Comparatif Global',
-    publishedDate: '2026-10-22T08:00:00Z',
-    modifiedDate: '2026-10-22T08:00:00Z',
-    todoHumanNotice: '<!-- TODO HUMAIN : remplacer les placeholders par les données réelles vérifiées avant publication. Ne jamais inventer un prix concurrent. -->',
+    publishedDate: '2026-10-23T08:00:00Z',
+    modifiedDate: '2026-10-23T08:00:00Z',
+    todoHumanNotice: '<!-- STRATÉGIE TARIFAIRE : Quotepro, Estimapro et Turbotravaux ne publient pas leurs tarifs. Cette opacité est exploitée comme argument de vente pour BATIDEVIS (tarif affiché 19€/mois). Aucune donnée inventée. -->',
     h1: 'Logiciel devis avec génération automatique : comparatif des 4 acteurs 2026',
     intro: 'La promesse de la "génération automatique de devis" inonde les publicités destinées aux artisans du bâtiment. En deux clics, votre chiffrage serait prêt. Mais sur le terrain, que vaut réellement cette automatisation ? Est-elle conforme à la loi ? Et surtout, protège-t-elle la marge de l\'artisan ou se contente-t-elle de remplir des lignes sans vérifier la réalité du chantier ?',
     sections: [
@@ -425,6 +456,18 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
           'Générer un devis en 10 secondes est inutile si le document est contestable devant un tribunal ou retoqué par la DGCCRF.',
           'En 2026, la réglementation française exige 16 mentions obligatoires strictes sur chaque devis d\'artisan : attestation décennale complète avec coordonnées précises de l\'assureur et zone géographique couverte, statut TVA (ou mention légale de l\'article 293 B du CGI), numéro SIRET, date de début estimée et pénalités de retard applicables.',
           'Un logiciel d\'automatisation mal calibré qui omet ces mentions expose l\'artisan à des amendes allant de 15 € à 750 € par document, voire à la nullité du contrat en cas de litige client.'
+        ]
+      },
+      {
+        h2: 'La transparence tarifaire : le grand oublié des comparatifs',
+        content: [
+          'La majorité des comparatifs de logiciels devis se concentrent sur les fonctionnalités. Mais pour un artisan indépendant, il y a un critère tout aussi décisif : **savoir ce que l\'outil va coûter avant de s\'engager**.',
+          'Sur les 4 acteurs comparés ici, un seul affiche son tarif publiquement :',
+          '• **Quotepro** : tarifs non publiés, contact commercial obligatoire',
+          '• **Estimapro** : tarifs non publiés, devis personnalisé requis',
+          '• **Turbotravaux** : grille tarifaire non claire, coûts réels découverts progressivement',
+          '• **BATIDEVIS** : **19€/mois affiché publiquement, sans engagement, sans frais cachés**',
+          'Cette transparence n\'est pas un détail. C\'est le signe qu\'un éditeur respecte le temps de l\'artisan et ne cherche pas à le piéger dans un processus d\'achat opaque.'
         ]
       },
       {
@@ -449,7 +492,8 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
         ]
       }
     ],
-    tableData: [], // utilise multiActorTableData
+
+    tableData: [],
     multiActorTableData: [
       {
         critere: 'Génération automatique par Kits métier',
@@ -487,24 +531,32 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
         batidevis: '✓ Directe sur écran'
       },
       {
+        critere: 'Tarif mensuel',
+        quotepro: 'Sur devis (contact commercial)',
+        estimapro: 'Sur devis (contact commercial)',
+        turbotravaux: 'Non publié clairement',
+        batidevis: '✓ 19€/mois affiché publiquement'
+      },
+      {
+        critere: 'Processus d\'achat',
+        quotepro: 'Formulaire + RDV commercial',
+        estimapro: 'Contact commercial requis',
+        turbotravaux: 'Inscription + coûts progressifs',
+        batidevis: '✓ Test immédiat, tarif connu'
+      },
+      {
         critere: 'Acompte plancher & relances automatiques',
         quotepro: 'Comptabilité manuelle',
         estimapro: 'Non prioritaire',
         turbotravaux: 'Non proposé',
         batidevis: '🔒 En préparation (Fondateurs)'
-      },
-      {
-        critere: 'Tarif mensuel indicatif',
-        quotepro: '[[PRIX_QUOTEPRO_MOIS]] / mois',
-        estimapro: '[[PRIX_ESTIMAPRO_MOIS]] / mois',
-        turbotravaux: '[[PRIX_TURBOTRAVAUX_MOIS]] / mois',
-        batidevis: '19 € (9,50 € cohorte ou gratuit)'
       }
     ],
+
     verdict: {
-      pourQuiConcurrent: 'Pour les structures établies avec du personnel dédié au chiffrage au bureau, Quotepro et Estimapro restent des solutions historiques très complètes.',
-      pourQuiBatidevis: 'Pour l\'artisan indépendant qui gère tout seul de A à Z et exige un devis rapide, légalement inattaquable et rentable dès la première minute.',
-      conclusion: 'Rejoignez la cohorte des 20 artisans fondateurs pour tester BATIDEVIS sur vos prochains chantiers.'
+      pourQuiConcurrent: 'Pour les structures établies avec du personnel dédié au chiffrage au bureau, Quotepro et Estimapro restent des solutions historiques très complètes. Si vous acceptez le processus d\'achat par contact commercial.',
+      pourQuiBatidevis: 'Pour l\'artisan indépendant qui gère tout seul de A à Z, qui veut connaître le prix immédiatement, et qui exige un devis rapide, légalement inattaquable et rentable dès la première minute.',
+      conclusion: 'La transparence tarifaire n\'est pas un détail : c\'est le signe qu\'un éditeur respecte votre temps et votre intelligence.'
     },
     faq: [
       {

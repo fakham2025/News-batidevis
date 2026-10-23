@@ -648,6 +648,7 @@ export function calculateDocumentFinancials(
 
 // Helper : Initialisation ou lecture du profil artisan
 export function getSavedProfile(): Profile {
+  if (typeof window === 'undefined') return DEFAULT_PROFILE;
   try {
     const raw = localStorage.getItem(KEY_PROFILE);
     if (raw) return JSON.parse(raw);
@@ -658,6 +659,7 @@ export function getSavedProfile(): Profile {
 }
 
 export function saveProfile(profile: Profile): void {
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(KEY_PROFILE, JSON.stringify(profile));
   } catch (e) {
@@ -667,6 +669,7 @@ export function saveProfile(profile: Profile): void {
 
 // Helper : Documents (Devis & Factures unifiés avec statuts)
 export function getSavedDocuments(): Document[] {
+  if (typeof window === 'undefined') return INITIAL_DOCUMENTS;
   try {
     const raw = localStorage.getItem(KEY_DOCUMENTS);
     if (raw) return JSON.parse(raw);
@@ -679,6 +682,7 @@ export function getSavedDocuments(): Document[] {
 }
 
 export function saveDocuments(docs: Document[]): void {
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(KEY_DOCUMENTS, JSON.stringify(docs));
   } catch (e) {
@@ -709,6 +713,7 @@ export function deleteDocument(docId: string): Document[] {
 
 // Helper : Kits Chantier (Killer Feature)
 export function getSavedKits(): Kit[] {
+  if (typeof window === 'undefined') return PRESET_KITS;
   try {
     const raw = localStorage.getItem(KEY_KITS);
     if (raw) return JSON.parse(raw);
@@ -720,6 +725,7 @@ export function getSavedKits(): Kit[] {
 }
 
 export function saveKits(kits: Kit[]): void {
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(KEY_KITS, JSON.stringify(kits));
   } catch (e) {
@@ -729,6 +735,24 @@ export function saveKits(kits: Kit[]): void {
 
 // Helper : Cohorte Fondateurs & Waitlist
 export function getSavedWaitlist(): WaitlistEntry[] {
+  if (typeof window === 'undefined') {
+    return [
+      {
+        id: 'fnd_1',
+        prenom: 'Julien M.',
+        email: 'julien.plomberie.nantes@gmail.com',
+        metier: 'Plombier Chauffagiste',
+        departement: '44',
+        statut_tva: 'tva_normale',
+        probleme: 'Perte de temps le soir',
+        source: 'linkedin',
+        created_at: '2026-10-14T10:12:00Z',
+        plan: 'beta',
+        status: 'active',
+        quota_category: 'plomberie'
+      }
+    ];
+  }
   try {
     const raw = localStorage.getItem(KEY_WAITLIST);
     if (raw) return JSON.parse(raw);
@@ -829,6 +853,7 @@ export function getSavedWaitlist(): WaitlistEntry[] {
 }
 
 export function saveWaitlist(list: WaitlistEntry[]): void {
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(KEY_WAITLIST, JSON.stringify(list));
   } catch (e) {
@@ -1053,6 +1078,7 @@ export const INITIAL_SUBSCRIPTIONS: Subscription[] = [
 ];
 
 export function getSavedSubscriptions(): Subscription[] {
+  if (typeof window === 'undefined') return INITIAL_SUBSCRIPTIONS;
   try {
     const raw = localStorage.getItem(KEY_SUBSCRIPTIONS);
     if (raw) return JSON.parse(raw);
@@ -1064,6 +1090,7 @@ export function getSavedSubscriptions(): Subscription[] {
 }
 
 export function saveSubscriptions(subs: Subscription[]): void {
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(KEY_SUBSCRIPTIONS, JSON.stringify(subs));
   } catch (e) {
@@ -1108,6 +1135,7 @@ export const DEFAULT_SESSION: UserSession = {
 };
 
 export function getCurrentSession(): UserSession {
+  if (typeof window === 'undefined') return DEFAULT_SESSION;
   try {
     const raw = localStorage.getItem(KEY_SESSION);
     if (raw) return JSON.parse(raw);
@@ -1119,6 +1147,7 @@ export function getCurrentSession(): UserSession {
 }
 
 export function saveCurrentSession(session: UserSession): void {
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(KEY_SESSION, JSON.stringify(session));
   } catch (e) {

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+'use client';
+
 import React, { useEffect } from 'react';
 import { 
   ArrowLeft, 
@@ -22,8 +24,8 @@ import { WaitlistFormSection } from './WaitlistFormSection';
 
 interface ComparatifPageViewProps {
   slug: string;
-  onBackToHome: () => void;
-  onNavigateToSlug: (slug: string) => void;
+  onBackToHome?: () => void;
+  onNavigateToSlug?: (slug: string) => void;
   token?: string | null;
   onOpenPrivacy?: () => void;
 }
@@ -123,12 +125,18 @@ export function ComparatifPageView({
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-xs sm:text-sm">
           <ol className="flex items-center gap-1.5 text-slate-500 overflow-x-auto whitespace-nowrap">
             <li>
-              <button 
-                onClick={onBackToHome}
+              <a 
+                href="/"
+                onClick={(e) => {
+                  if (onBackToHome) {
+                    e.preventDefault();
+                    onBackToHome();
+                  }
+                }}
                 className="hover:text-blue-600 transition-colors flex items-center gap-1 font-medium cursor-pointer"
               >
                 <span>Accueil</span>
-              </button>
+              </a>
             </li>
             <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <li className="text-slate-500 font-medium">Comparatifs</li>
@@ -138,13 +146,19 @@ export function ComparatifPageView({
             </li>
           </ol>
 
-          <button
-            onClick={onBackToHome}
+          <a
+            href="/"
+            onClick={(e) => {
+              if (onBackToHome) {
+                e.preventDefault();
+                onBackToHome();
+              }
+            }}
             className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer shrink-0 ml-3"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Retour à l'accueil</span>
-          </button>
+          </a>
         </div>
       </nav>
 
@@ -326,9 +340,15 @@ export function ComparatifPageView({
             {otherComparatifs.map(otherSlug => {
               const other = COMPARATIFS[otherSlug];
               return (
-                <button
+                <a
                   key={otherSlug}
-                  onClick={() => onNavigateToSlug(otherSlug)}
+                  href={`/comparatif/${otherSlug}`}
+                  onClick={(e) => {
+                    if (onNavigateToSlug) {
+                      e.preventDefault();
+                      onNavigateToSlug(otherSlug);
+                    }
+                  }}
                   className="p-3.5 rounded-xl border border-slate-200 hover:border-blue-500 bg-white hover:bg-blue-50/30 text-left transition-all cursor-pointer group flex flex-col justify-between"
                 >
                   <span className="font-bold text-xs text-slate-900 group-hover:text-blue-600 transition-colors">
@@ -340,7 +360,7 @@ export function ComparatifPageView({
                   <span className="text-[11px] font-mono text-blue-600 mt-2 flex items-center gap-1 font-semibold">
                     Lire le comparatif <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                   </span>
-                </button>
+                </a>
               );
             })}
           </div>

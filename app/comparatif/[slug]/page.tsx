@@ -66,19 +66,5 @@ export default function ComparatifPage({ params }: PageProps) {
     notFound();
   }
 
-  return (
-    <ComparatifPageView
-      slug={params.slug}
-      onBackToHome={() => {
-        if (typeof window !== 'undefined') {
-          window.location.href = '/';
-        }
-      }}
-      onNavigateToSlug={(newSlug) => {
-        if (typeof window !== 'undefined') {
-          window.location.href = `/comparatif/${newSlug}`;
-        }
-      }}
-    />
-  );
+  return <ComparatifPageView slug={params.slug} />;
 }

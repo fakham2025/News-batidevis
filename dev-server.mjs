@@ -29,6 +29,7 @@ const child = spawn('next', nextArgs, {
   shell: true,
   env: {
     ...process.env,
+    NODE_ENV: 'development',
     PORT: '3000',
   },
 });

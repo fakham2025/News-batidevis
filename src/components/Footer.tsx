@@ -1,3 +1,5 @@
+'use client';
+
 import { FileCheck2, ShieldCheck, Mail, Phone, Lock } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 

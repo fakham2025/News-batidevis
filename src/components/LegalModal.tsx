@@ -1,3 +1,5 @@
+'use client';
+
 import { X, ShieldCheck, Mail } from 'lucide-react';
 
 interface LegalModalProps {

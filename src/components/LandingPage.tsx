@@ -1,9 +1,10 @@
+'use client';
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use client';
 
 import React, { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
@@ -79,6 +80,13 @@ export function LandingPage() {
       }
     };
     window.addEventListener('keydown', handleKeyDown);
+
+    // Register service worker for offline capabilities
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
 
     return () => {
       unsubscribe();

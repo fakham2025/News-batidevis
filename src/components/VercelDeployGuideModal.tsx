@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { X, Copy, Check, Terminal, ExternalLink, FileCode, CheckCircle2 } from 'lucide-react';
 

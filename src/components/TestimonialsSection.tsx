@@ -1,3 +1,5 @@
+'use client';
+
 import { Star, Quote, CheckCircle, Wrench, Zap, Hammer } from 'lucide-react';
 import { Card } from './ui/Card';
 

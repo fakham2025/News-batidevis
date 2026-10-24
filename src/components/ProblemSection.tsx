@@ -1,3 +1,5 @@
+'use client';
+
 import { Clock, AlertTriangle, TrendingDown, ArrowDownRight, Wallet } from 'lucide-react';
 
 export function ProblemSection() {

@@ -122,6 +122,23 @@ export function DevisBuilderModal({
     setTimeout(() => setNotification(null), 3500);
   };
 
+  // Calcul en direct de la marge brute réelle
+  const marginCalc = React.useMemo(() => {
+    if (!currentDoc) return { hasCostPrice: false, totalMargin: 0, marginPercent: 0 };
+    const fin = calculateDocumentFinancials(
+      currentDoc.items,
+      profile.is_tva_subject,
+      discountType,
+      discountValue,
+      depositEnabled ? depositRate : 0
+    );
+    return {
+      hasCostPrice: fin.has_cost_price,
+      totalMargin: fin.total_margin,
+      marginPercent: fin.margin_percent
+    };
+  }, [currentDoc, profile.is_tva_subject, discountType, discountValue, depositEnabled, depositRate]);
+
   // Recalcul des totaux avec multi-TVA, remise et acompte
   const recalculateAndSave = (
     doc: Document, 
@@ -287,6 +304,7 @@ export function DevisBuilderModal({
       description: ki.description,
       quantity: ki.quantity,
       unit_price: ki.unit_price,
+      cost_price: ki.cost_price,
       unit: ki.unit || 'unité',
       tva_rate: profile.is_tva_subject ? currentDoc.tva_rate_default : 0,
       total: ki.total,
@@ -887,7 +905,24 @@ export function DevisBuilderModal({
                               value={item.unit_price}
                               onChange={(e) => handleUpdateItem(item.id, 'unit_price', parseFloat(e.target.value) || 0)}
                               className="w-20 px-1.5 py-1 text-right font-mono rounded border border-slate-200 focus:border-blue-500 font-bold"
+                              title="Prix de vente unitaire HT"
                             />
+                            <div className="print:hidden mt-1 flex items-center justify-end gap-1">
+                              <span className="text-[10px] text-slate-400 font-mono">Coût :</span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                placeholder="0 €"
+                                value={item.cost_price ?? ''}
+                                onChange={(e) => {
+                                  const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                                  handleUpdateItem(item.id, 'cost_price', val);
+                                }}
+                                className="w-16 px-1 py-0.5 text-right font-mono text-[11px] rounded border border-slate-200 focus:border-emerald-500 bg-slate-50/80 text-slate-700"
+                                title="Coût réel (€) optionnel"
+                              />
+                            </div>
                           </td>
                           {profile.is_tva_subject && (
                             <td className="py-2 px-3 text-center">
@@ -1145,6 +1180,28 @@ export function DevisBuilderModal({
                     <span className="font-mono text-blue-400 print:text-blue-900 text-lg font-extrabold">
                       {currentDoc.total_ttc.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
                     </span>
+                  </div>
+
+                  {/* Ligne Marge brute réelle */}
+                  <div className="pt-2 border-t border-slate-800 print:border-slate-300">
+                    {marginCalc.hasCostPrice ? (
+                      <div className={`flex justify-between items-center text-xs py-1.5 px-2.5 rounded-xl border ${
+                        marginCalc.marginPercent >= 20
+                          ? 'text-emerald-400 bg-emerald-950/50 border-emerald-800/60 print:text-emerald-800 print:bg-emerald-50'
+                          : marginCalc.marginPercent >= 10
+                            ? 'text-amber-400 bg-amber-950/50 border-amber-800/60 print:text-amber-800 print:bg-amber-50'
+                            : 'text-red-400 bg-red-950/50 border-red-800/60 print:text-red-800 print:bg-red-50'
+                      }`}>
+                        <span className="font-semibold">Marge brute :</span>
+                        <span className="font-mono font-extrabold text-sm">
+                          {marginCalc.totalMargin.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} € ({marginCalc.marginPercent.toFixed(1)} %)
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-[11px] text-slate-400 print:text-slate-500 italic text-right py-0.5">
+                        Marge : non calculée (renseignez vos coûts réels)
+                      </div>
+                    )}
                   </div>
 
                   {/* Acompte & Solde */}

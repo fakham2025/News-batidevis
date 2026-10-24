@@ -61,6 +61,7 @@ export interface KitItem {
   description: string;
   quantity: number;
   unit_price: number;
+  cost_price?: number; // Coût d'achat réel (fourniture ou coût horaire chargé)
   total: number;
   unit?: string;
 }
@@ -75,6 +76,7 @@ export interface DocumentItem {
   description: string;
   quantity: number;
   unit_price: number;
+  cost_price?: number; // Coût d'achat réel (fourniture ou coût horaire chargé)
   unit?: string;
   tva_rate: number; // 0, 5.5, 10, 20
   total: number;
@@ -222,11 +224,12 @@ export const PRESET_KITS: Kit[] = [
       {
         id: 'ki_1',
         kit_id: 'kit_plomb_01',
-        description: 'Chauffe-eau thermodynamique 200L classe A+ (NF Électricité Performance)',
+        description: 'Fourniture chauffe-eau 200L classe A+ (NF Électricité Performance)',
         quantity: 1,
-        unit_price: 1380.00,
+        unit_price: 650.00,
+        cost_price: 480.00,
         unit: 'unité',
-        total: 1380.00
+        total: 650.00
       },
       {
         id: 'ki_2',
@@ -234,6 +237,7 @@ export const PRESET_KITS: Kit[] = [
         description: 'Groupe de sécurité inox + siphon + raccords diélectriques cuivre',
         quantity: 1,
         unit_price: 95.00,
+        cost_price: 55.00,
         unit: 'forfait',
         total: 95.00
       },
@@ -242,9 +246,10 @@ export const PRESET_KITS: Kit[] = [
         kit_id: 'kit_plomb_01',
         description: 'Main d\'œuvre qualifiée : dépose, fixation murale, raccordements & mise en eau',
         quantity: 4.5,
-        unit_price: 65.00,
+        unit_price: 60.00,
+        cost_price: 38.00,
         unit: 'heure',
-        total: 292.50
+        total: 270.00
       },
       {
         id: 'ki_4',
@@ -252,6 +257,7 @@ export const PRESET_KITS: Kit[] = [
         description: 'Mise en décharge contrôlée et bordereau de suivi déchets BSD',
         quantity: 1,
         unit_price: 45.00,
+        cost_price: 20.00,
         unit: 'forfait',
         total: 45.00
       }
@@ -471,6 +477,7 @@ export const INITIAL_DOCUMENTS: Document[] = [
         description: 'Chauffe-eau 200L Thermodynamique classe A+ avec raccords isolés',
         quantity: 1,
         unit_price: 1420.00,
+        cost_price: 1050.00,
         unit: 'unité',
         tva_rate: 10,
         total: 1420.00,
@@ -483,6 +490,7 @@ export const INITIAL_DOCUMENTS: Document[] = [
         description: 'Pose & raccordements cuivre avec groupe de sécurité inox neuf',
         quantity: 1,
         unit_price: 380.00,
+        cost_price: 240.00,
         unit: 'forfait',
         tva_rate: 10,
         total: 380.00,
@@ -495,6 +503,7 @@ export const INITIAL_DOCUMENTS: Document[] = [
         description: 'Évacuation anciens matériels et recyclage avec bordereau BSD',
         quantity: 1,
         unit_price: 65.00,
+        cost_price: 25.00,
         unit: 'forfait',
         tva_rate: 10,
         total: 65.00,
@@ -567,9 +576,18 @@ export function calculateDocumentFinancials(
   total_ttc: number;
   deposit_amount: number;
   balance_due: number;
+  total_margin: number;
+  margin_percent: number;
+  has_cost_price: boolean;
 } {
   const raw_total_ht = Math.round(
     items.reduce((acc, it) => acc + (it.quantity * it.unit_price), 0) * 100
+  ) / 100;
+
+  // Calcul marge brute réelle : somme sur chaque item de (unit_price - (cost_price || 0)) * quantity
+  const has_cost_price = items.some(it => typeof it.cost_price === 'number' && it.cost_price > 0);
+  const total_margin = Math.round(
+    items.reduce((acc, it) => acc + ((it.unit_price - (it.cost_price || 0)) * it.quantity), 0) * 100
   ) / 100;
 
   let discount_amount = 0;
@@ -580,6 +598,7 @@ export function calculateDocumentFinancials(
   }
 
   const net_total_ht = Math.round(Math.max(0, raw_total_ht - discount_amount) * 100) / 100;
+  const margin_percent = net_total_ht > 0 ? Math.round((total_margin / net_total_ht) * 1000) / 10 : 0;
 
   // Si l'artisan n'est pas assujetti à la TVA (art. 293 B)
   if (!isTvaSubject) {
@@ -595,7 +614,10 @@ export function calculateDocumentFinancials(
       total_tva: 0,
       total_ttc,
       deposit_amount,
-      balance_due
+      balance_due,
+      total_margin,
+      margin_percent,
+      has_cost_price
     };
   }
 
@@ -642,7 +664,10 @@ export function calculateDocumentFinancials(
     total_tva,
     total_ttc,
     deposit_amount,
-    balance_due
+    balance_due,
+    total_margin,
+    margin_percent,
+    has_cost_price
   };
 }
 

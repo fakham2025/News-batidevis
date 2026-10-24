@@ -30,17 +30,27 @@ export function KitsChantierFeature({ onOpenDevisBuilder, onScrollToWaitlist }: 
   const [selectedKitIndex, setSelectedKitIndex] = useState<number>(0);
   const [surfaceMultiplier, setSurfaceMultiplier] = useState<number>(1);
   const [selectedTvaRate, setSelectedTvaRate] = useState<number>(10); // 10% réno par défaut
+  const [customCostPrices, setCustomCostPrices] = useState<Record<string, number | undefined>>({});
 
   const currentKit = PRESET_KITS[selectedKitIndex] || PRESET_KITS[0];
 
-  // Recalcul en temps réel avec le multiplicateur
+  const handleUpdateCostPrice = (itemId: string, cost: number | undefined) => {
+    setCustomCostPrices(prev => ({ ...prev, [itemId]: cost }));
+  };
+
+  // Recalcul en temps réel avec le multiplicateur et les coûts réels
   const calculatedItems = currentKit.items.map(item => {
     const qty = Math.round(item.quantity * surfaceMultiplier * 10) / 10;
+    const cost_price = customCostPrices[item.id] !== undefined ? customCostPrices[item.id] : item.cost_price;
     const total = Math.round(qty * item.unit_price * 100) / 100;
-    return { ...item, quantity: qty, total };
+    return { ...item, quantity: qty, cost_price, total };
   });
 
   const totalHT = calculatedItems.reduce((acc, it) => acc + it.total, 0);
+  const totalCost = calculatedItems.reduce((acc, it) => acc + ((it.cost_price || 0) * it.quantity), 0);
+  const hasCost = calculatedItems.some(it => typeof it.cost_price === 'number' && it.cost_price > 0);
+  const marginAmount = totalHT - totalCost;
+  const marginPercent = totalHT > 0 ? (marginAmount / totalHT) * 100 : 0;
   const totalTVA = Math.round((totalHT * (selectedTvaRate / 100)) * 100) / 100;
   const totalTTC = Math.round((totalHT + totalTVA) * 100) / 100;
 
@@ -101,7 +111,7 @@ export function KitsChantierFeature({ onOpenDevisBuilder, onScrollToWaitlist }: 
             {onOpenDevisBuilder && (
               <button
                 type="button"
-                onClick={() => onOpenDevisBuilder(currentKit)}
+                onClick={() => onOpenDevisBuilder({ ...currentKit, items: calculatedItems })}
                 className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-600/25 transition-all cursor-pointer flex items-center gap-2"
               >
                 <Calculator className="w-4 h-4" />
@@ -197,16 +207,32 @@ export function KitsChantierFeature({ onOpenDevisBuilder, onScrollToWaitlist }: 
                 <span>Désignation & Lignes automatiques</span>
                 <span>Total HT</span>
               </div>
-              <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                 {calculatedItems.map((it) => (
-                  <div key={it.id} className="flex justify-between items-center text-xs py-1">
-                    <div className="min-w-0 pr-3">
+                  <div key={it.id} className="flex justify-between items-center text-xs py-1.5 border-b border-slate-800/40 last:border-b-0">
+                    <div className="min-w-0 pr-3 flex-1">
                       <div className="text-slate-200 font-medium truncate">{it.description}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">
-                        {it.quantity} {it.unit || 'u.'} × {it.unit_price.toFixed(2)} €
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {it.quantity} {it.unit || 'u.'} × {it.unit_price.toFixed(2)} €
+                        </span>
+                        <span className="text-slate-700 text-[10px]">•</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] text-slate-400 font-mono">Coût :</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="Optionnel"
+                            value={it.cost_price ?? ''}
+                            onChange={(e) => handleUpdateCostPrice(it.id, e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                            className="w-14 px-1 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700 focus:border-emerald-500 font-mono text-[10px] text-right"
+                            title="Coût réel (€)"
+                          />
+                        </div>
                       </div>
                     </div>
-                    <span className="font-mono font-bold text-white whitespace-nowrap">
+                    <span className="font-mono font-bold text-white whitespace-nowrap text-right">
                       {it.total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
                     </span>
                   </div>
@@ -263,6 +289,20 @@ export function KitsChantierFeature({ onOpenDevisBuilder, onScrollToWaitlist }: 
                 <span className="font-mono text-blue-400 font-extrabold text-base sm:text-lg">
                   {totalTTC.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} € TTC
                 </span>
+              </div>
+
+              {/* Marge brute estimée */}
+              <div className="pt-2 border-t border-slate-800/80 flex justify-between items-center text-xs">
+                <span className="font-semibold text-slate-300">Marge brute estimée :</span>
+                {hasCost ? (
+                  <span className={`font-mono font-bold ${
+                    marginPercent >= 20 ? 'text-emerald-400' : marginPercent >= 10 ? 'text-amber-400' : 'text-red-400'
+                  }`}>
+                    {marginAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} € ({marginPercent.toFixed(1)} %)
+                  </span>
+                ) : (
+                  <span className="text-slate-500 italic text-[11px]">Renseignez vos coûts</span>
+                )}
               </div>
             </div>
 

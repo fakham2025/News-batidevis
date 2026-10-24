@@ -144,7 +144,7 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
       {
         critere: 'Mentions légales 2026 & Factur-X',
         concurrent: '✓ Disponible dans les versions récentes',
-        batidevis: '✓ Automatique (16 mentions + format hybride PPF)'
+        batidevis: '✓ 16 mentions auto · Export Factur-X en V1.1 (calendrier TPE 09/2027)'
       },
       {
         critere: 'Signature tactile sur smartphone',
@@ -176,7 +176,7 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
     faq: [
       {
         question: 'Puis-je importer mes clients de Quotepro vers BATIDEVIS ?',
-        answer: 'Oui, BATIDEVIS supporte l\'importation au format CSV standard pour vos listes de clients et vos tarifs habituels.'
+        answer: 'L\'import CSV de vos clients et tarifs arrive en V1.1 (décembre 2026). En attendant, la saisie d\'un client prend moins de 30 secondes et les Kits Chantier mémorisent vos prestations récurrentes.'
       },
       {
         question: 'Comment tester BATIDEVIS face à Quotepro sans risque ?',
@@ -392,7 +392,7 @@ export const COMPARATIFS: Record<string, ComparatifData> = {
       {
         critere: 'Conformité légale 2026',
         concurrent: 'Selon options souscrites',
-        batidevis: '✓ Inclus de base (16 mentions BTP + Factur-X)'
+        batidevis: '✓ 16 mentions auto · Export Factur-X en V1.1 (calendrier TPE 09/2027)'
       },
       {
         critere: 'Visibilité des coûts',

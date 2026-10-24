@@ -4,15 +4,17 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node dev-server.mjs",
-    "build": "NODE_ENV=production next build",
-    "start": "next start -p 3000",
+    "dev": "vite",
+    "build": "vite build && tsx scripts/prerender.ts",
+    "preview": "vite preview",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
     "@next/env": "^16.4.2",
+    "@tailwindcss/vite": "^4.3.3",
     "@types/canvas-confetti": "^1.9.0",
+    "@vitejs/plugin-react": "^6.1.2",
     "canvas-confetti": "^1.9.4",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
@@ -21,7 +23,8 @@
     "motion": "^12.23.24",
     "next": "^14.2.35",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "vite": "^8.3.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

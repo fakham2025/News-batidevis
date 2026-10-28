@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { FileCheck2, ShieldCheck, Mail, Phone, PlusCircle, UserCheck } from 'lucide-react';
 
 interface FooterProps {
@@ -21,7 +21,7 @@ export function Footer({ onOpenLegal }: FooterProps) {
                 <FileCheck2 className="w-5 h-5" />
               </div>
               <span className="font-heading font-extrabold text-2xl tracking-tight text-white">
-                Bâti<span className="text-blue-500">Devis</span>
+                BÃ¢ti<span className="text-blue-500">Devis</span>
               </span>
               <span className="bg-blue-950 text-blue-300 font-mono text-xs font-bold px-2 py-0.5 rounded border border-blue-800/80">
                 2026 Ready
@@ -29,12 +29,12 @@ export function Footer({ onOpenLegal }: FooterProps) {
             </div>
 
             <p className="font-sans text-sm text-slate-400 max-w-md leading-relaxed">
-              Le logiciel devis facture artisan qui comprend votre métier. Conçu pour faire gagner du temps aux professionnels du bâtiment et garantir une conformité sans faille.
+              Le logiciel devis facture artisan qui comprend votre mÃ©tier. ConÃ§u pour faire gagner du temps aux professionnels du bÃ¢timent et garantir une conformitÃ© sans faille.
             </p>
 
             <div className="flex items-center gap-4 text-xs text-slate-500 pt-1 font-sans">
               <span className="flex items-center gap-1.5 text-slate-400">
-                <ShieldCheck className="w-4 h-4 text-blue-400" /> Données chiffrées & hébergées en France (RGPD)
+                <ShieldCheck className="w-4 h-4 text-blue-400" /> DonnÃ©es chiffrÃ©es & hÃ©bergÃ©es en France (RGPD)
               </span>
             </div>
           </div>
@@ -51,7 +51,7 @@ export function Footer({ onOpenLegal }: FooterProps) {
                   className="hover:text-emerald-400 transition-colors flex items-center gap-1.5 text-left text-slate-300"
                 >
                   <PlusCircle className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Créer un devis</span>
+                  <span>CrÃ©er un devis</span>
                 </Link>
               </li>
               <li>
@@ -69,7 +69,7 @@ export function Footer({ onOpenLegal }: FooterProps) {
           {/* Links & Legal */}
           <div className="md:col-span-2 space-y-3 text-left">
             <div className="text-xs uppercase font-bold tracking-wider text-gray-300 font-mono">
-              Légal
+              LÃ©gal
             </div>
             <ul className="space-y-2.5 text-sm">
               <li>
@@ -78,7 +78,7 @@ export function Footer({ onOpenLegal }: FooterProps) {
                   onClick={() => onOpenLegal('mentions')}
                   className="hover:text-white hover:underline transition-colors cursor-pointer text-left"
                 >
-                  Mentions légales
+                  Mentions lÃ©gales
                 </button>
               </li>
               <li>
@@ -96,7 +96,7 @@ export function Footer({ onOpenLegal }: FooterProps) {
                   onClick={() => onOpenLegal('privacy')}
                   className="hover:text-white hover:underline transition-colors cursor-pointer text-left"
                 >
-                  Confidentialité
+                  ConfidentialitÃ©
                 </button>
               </li>
               <li>
@@ -125,7 +125,7 @@ export function Footer({ onOpenLegal }: FooterProps) {
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-blue-400 shrink-0" />
-                <span>Support artisan basé à Nantes</span>
+                <span>Support artisan basÃ© Ã  Nantes</span>
               </div>
             </div>
           </div>
@@ -134,15 +134,15 @@ export function Footer({ onOpenLegal }: FooterProps) {
 
         {/* Copyright bottom line */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+          {/* Lien admin discret â€” visible uniquement si on sait qu'il existe */}
           <div>
-            © 2026 BâtiDevis. Tous droits réservés.
+            Â© 2026 BÃ¢tiDevis. Tous droits rÃ©servÃ©s.
           </div>
-          <div className="flex items-center gap-1 text-gray-500">
-            <span>Conçu avec fierté pour les artisans de France</span>
-          </div>
+          <div className="flex items-center gap-1 text-gray-500"><span>Conçu avec fierté pour les artisans de France</span><Link to="/admin" className="opacity-0 hover:opacity-30 ml-2 transition-opacity">·</Link></div>
         </div>
 
       </div>
     </footer>
   );
 }
+

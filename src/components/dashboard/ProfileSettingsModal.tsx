@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Building2, ShieldCheck, CreditCard, Check, Save } from 'lucide-react';
+import { X, Building2, ShieldCheck, CreditCard, Save, Sparkles } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { SiretAutocomplete } from '../common/SiretAutocomplete';
 
 interface ProfileSettingsModalProps {
   isOpen: boolean;
@@ -68,7 +69,7 @@ export function ProfileSettingsModal({ isOpen, onClose, onSave }: ProfileSetting
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -85,6 +86,27 @@ export function ProfileSettingsModal({ isOpen, onClose, onSave }: ProfileSetting
               Ces informations seront automatiquement injectées sur vos devis et factures.
             </p>
           </div>
+        </div>
+
+        {/* Recherche instantanée SIRET */}
+        <div className="p-3.5 bg-blue-50/70 rounded-2xl border border-blue-200/80 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+              <span>Remplissage automatique via l'API Gouv.fr</span>
+            </span>
+            <span className="text-[10px] font-mono text-blue-700 font-semibold bg-white px-1.5 py-0.5 rounded border border-blue-200">
+              INSEE / RNE
+            </span>
+          </div>
+          <SiretAutocomplete
+            placeholder="Tapez le nom de votre entreprise ou votre SIRET..."
+            onSelect={(ent) => {
+              setCompanyName(ent.nom_complet);
+              setSiret(ent.siret);
+              if (ent.adresse_complete) setAddress(ent.adresse_complete);
+            }}
+          />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

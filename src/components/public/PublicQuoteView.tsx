@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShieldCheck, CheckCircle2, Download, Printer, Check, Clock, Building2, Phone, Calendar } from 'lucide-react';
 import { PublicQuoteData, signPublicQuote } from '../../services/publicQuote';
 import { SignaturePad } from '../signature/SignaturePad';
+import { StripeDepositButton } from './StripeDepositButton';
 import { Button } from '../ui/Button';
 import confetti from 'canvas-confetti';
 
@@ -80,6 +81,22 @@ export function PublicQuoteView({ quote, onSigned }: PublicQuoteViewProps) {
             <span>Télécharger PDF</span>
           </Button>
         </div>
+      )}
+
+      {/* Module de Paiement d'Acompte 30% Stripe (actif dès acceptation) */}
+      {isAlreadySigned && (
+        <StripeDepositButton
+          params={{
+            quoteNumber: quote.quoteNumber,
+            depositInvoiceNumber: `FAC-ACOMPTE-${quote.quoteNumber.replace('DEV-', '')}`,
+            totalQuoteTtc: quote.totalTTC,
+            depositPercent: 30,
+            clientName: quote.clientName,
+            clientEmail: quote.clientEmail,
+            successUrl: typeof window !== 'undefined' ? window.location.href : '',
+            cancelUrl: typeof window !== 'undefined' ? window.location.href : ''
+          }}
+        />
       )}
 
       {/* Official A4 French Quote Layout */}

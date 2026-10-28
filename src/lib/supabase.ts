@@ -67,3 +67,41 @@ export interface DevisKitItem {
   description: string;
   is_system: boolean;
 }
+
+export interface QuoteSignatureData {
+  share_token: string;
+  client_signature_data?: string;
+  client_signed_at?: string;
+  client_signed_ip?: string;
+  signer_name?: string;
+}
+
+export interface InvoiceRecord {
+  id?: string;
+  quote_id?: string;
+  user_id?: string;
+  invoice_number: string;
+  invoice_type: 'acompte_30' | 'solde' | 'acompte_custom';
+  client_name: string;
+  client_email?: string;
+  client_address?: string;
+  items: Array<{
+    designation: string;
+    quantity: number;
+    unit: string;
+    unitPriceHT: number;
+    vatRate: number;
+    totalHT: number;
+    totalTTC: number;
+  }>;
+  total_ht: number;
+  total_vat: number;
+  total_ttc: number;
+  deposit_deducted: number;
+  deposit_invoice_ref?: string;
+  net_to_pay: number;
+  status: 'unpaid' | 'paid' | 'cancelled';
+  due_date: string;
+  payment_method?: string;
+  created_at?: string;
+}

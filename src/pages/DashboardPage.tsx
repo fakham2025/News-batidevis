@@ -17,6 +17,7 @@ import { QuoteCard } from '../components/dashboard/QuoteCard';
 import { InvoiceCard } from '../components/dashboard/InvoiceCard';
 import { ProfileSettingsModal } from '../components/dashboard/ProfileSettingsModal';
 import { ShareQuoteModal } from '../components/share/ShareQuoteModal';
+import { FollowUpModal } from '../components/dashboard/FollowUpModal';
 import { QuotePayload } from '../services/quotes';
 import { InvoiceRecord } from '../lib/supabase';
 import { generateDepositInvoice, generateFinalInvoice, saveInvoice, getInvoices } from '../services/invoices';
@@ -31,6 +32,8 @@ export function DashboardPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [selectedQuoteForShare, setSelectedQuoteForShare] = useState<any>(null);
+  const [followUpModalOpen, setFollowUpModalOpen] = useState(false);
+  const [selectedQuoteForFollowUp, setSelectedQuoteForFollowUp] = useState<any>(null);
 
   // Load quotes and invoices
   const loadData = async () => {
@@ -167,6 +170,11 @@ export function DashboardPage() {
     setShareModalOpen(true);
   };
 
+  const handleOpenFollowUp = (quote: any) => {
+    setSelectedQuoteForFollowUp(quote);
+    setFollowUpModalOpen(true);
+  };
+
   // Financial Stats
   const totalInvoiced = invoices.reduce((acc, curr) => acc + curr.net_to_pay, 0);
   const totalAcceptedQuotes = quotes.filter((q) => q.status === 'accepted').length;
@@ -301,6 +309,7 @@ export function DashboardPage() {
                   onConvertDeposit={handleConvertDeposit}
                   onConvertFinal={handleConvertFinal}
                   onShare={handleOpenShare}
+                  onFollowUp={handleOpenFollowUp}
                 />
               ))
             )}
@@ -345,6 +354,22 @@ export function DashboardPage() {
           clientPhone={selectedQuoteForShare.clientPhone}
           totalTTC={selectedQuoteForShare.totalTTC}
           shareToken={selectedQuoteForShare.shareToken || 'tok_share_default'}
+        />
+      )}
+
+      {/* Follow-up WhatsApp / SMS Modal */}
+      {selectedQuoteForFollowUp && (
+        <FollowUpModal
+          isOpen={followUpModalOpen}
+          onClose={() => setFollowUpModalOpen(false)}
+          params={{
+            clientName: selectedQuoteForFollowUp.clientName,
+            clientPhone: selectedQuoteForFollowUp.clientPhone || '06 12 34 56 78',
+            projectTitle: selectedQuoteForFollowUp.projectTitle,
+            quoteNumber: selectedQuoteForFollowUp.quoteNumber,
+            totalTtc: selectedQuoteForFollowUp.totalTTC,
+            quoteUrl: `${window.location.origin}/valider/${selectedQuoteForFollowUp.shareToken || 'tok_share_default'}`
+          }}
         />
       )}
     </div>

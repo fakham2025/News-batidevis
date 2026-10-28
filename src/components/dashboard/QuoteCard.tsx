@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, CheckCircle2, Clock, Share2, Receipt, ArrowRight, Printer } from 'lucide-react';
+import { CheckCircle2, Clock, Share2, Receipt, ArrowRight, Printer, MessageSquare } from 'lucide-react';
 import { QuotePayload } from '../../services/quotes';
 import { Button } from '../ui/Button';
 
@@ -8,13 +8,15 @@ interface QuoteCardProps {
   onConvertDeposit: (quote: QuotePayload) => void;
   onConvertFinal: (quote: QuotePayload) => void;
   onShare: (quote: QuotePayload) => void;
+  onFollowUp?: (quote: QuotePayload) => void;
 }
 
 export function QuoteCard({
   quote,
   onConvertDeposit,
   onConvertFinal,
-  onShare
+  onShare,
+  onFollowUp
 }: QuoteCardProps) {
   const isAccepted = quote.status === 'accepted';
 
@@ -71,6 +73,20 @@ export function QuoteCard({
             <Share2 className="w-3.5 h-3.5 text-blue-600" />
             <span>Partager / Lien</span>
           </Button>
+
+          {!isAccepted && onFollowUp && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onFollowUp(quote)}
+              className="text-xs bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 flex items-center gap-1.5 cursor-pointer font-semibold"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Relance WhatsApp</span>
+            </Button>
+          )}
+
           <Button
             type="button"
             variant="outline"

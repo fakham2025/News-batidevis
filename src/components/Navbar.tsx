@@ -1,12 +1,22 @@
 import { useState, useEffect } from 'react';
-import { FileCheck2, Sparkles, Menu, X, ArrowRight, ShieldCheck, Play } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { 
+  FileCheck2, 
+  Menu, 
+  X, 
+  ArrowRight, 
+  ShieldCheck, 
+  Play, 
+  PlusCircle, 
+  UserCheck 
+} from 'lucide-react';
 
 interface NavbarProps {
   onOpenDemo: () => void;
   onOpenDeployGuide?: () => void;
 }
 
-export function Navbar({ onOpenDemo, onOpenDeployGuide }: NavbarProps) {
+export function Navbar({ onOpenDemo }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showMobileBottomBar, setShowMobileBottomBar] = useState(false);
@@ -14,7 +24,6 @@ export function Navbar({ onOpenDemo, onOpenDeployGuide }: NavbarProps) {
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
-      // Show mobile sticky bottom bar after scrolling past hero (~350px)
       setShowMobileBottomBar(window.scrollY > 350);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -57,8 +66,8 @@ export function Navbar({ onOpenDemo, onOpenDeployGuide }: NavbarProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <a
-              href="#"
+            <Link
+              to="/"
               className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none"
               aria-label="BâtiDevis Accueil"
             >
@@ -78,7 +87,7 @@ export function Navbar({ onOpenDemo, onOpenDeployGuide }: NavbarProps) {
                   L'app devis & facture des artisans
                 </span>
               </div>
-            </a>
+            </Link>
 
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-7 lg:gap-8 font-sans">
@@ -116,31 +125,34 @@ export function Navbar({ onOpenDemo, onOpenDeployGuide }: NavbarProps) {
 
             {/* Desktop Action buttons */}
             <div className="hidden sm:flex items-center gap-3">
-              <button
-                onClick={onOpenDemo}
-                className="px-3.5 py-2 text-xs font-heading font-semibold text-slate-200 hover:text-white bg-slate-900 border border-slate-700/80 rounded-xl hover:border-slate-500 transition-all cursor-pointer"
+              <Link
+                to="/app/dashboard"
+                className="px-3.5 py-2 text-xs font-heading font-semibold text-slate-200 hover:text-white bg-slate-900 border border-slate-700/80 rounded-xl hover:border-slate-500 transition-all flex items-center gap-1.5"
               >
-                Voir la démo
-              </button>
-              <button
-                onClick={() => scrollToSection('waitlist')}
-                className="px-4 py-2 text-xs font-heading font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/30 rounded-xl transition-all cursor-pointer"
+                <UserCheck className="w-3.5 h-3.5 text-blue-400" />
+                <span>Espace Artisan</span>
+              </Link>
+              <Link
+                to="/creer-devis"
+                className="px-4 py-2 text-xs font-heading font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-600/30 rounded-xl transition-all flex items-center gap-1.5"
               >
-                Accès anticipé -50%
-              </button>
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>Créer un devis en 60s</span>
+              </Link>
             </div>
 
             {/* Mobile Actions: 1-Tap CTA + Hamburger */}
             <div className="flex items-center gap-2 md:hidden">
-              <button
-                onClick={() => scrollToSection('waitlist')}
-                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-heading font-bold text-xs shadow-sm transition-all"
+              <Link
+                to="/creer-devis"
+                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-heading font-bold text-xs shadow-sm transition-all flex items-center gap-1"
               >
-                -50% à vie
-              </button>
+                <PlusCircle className="w-3 h-3" />
+                <span>Devis 60s</span>
+              </Link>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 text-slate-200 hover:text-white rounded-lg bg-slate-900 border border-slate-800 focus:outline-none"
+                className="p-2 text-slate-200 hover:text-white rounded-lg bg-slate-900 border border-slate-800 focus:outline-none cursor-pointer"
                 aria-label="Menu"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -152,63 +164,79 @@ export function Navbar({ onOpenDemo, onOpenDeployGuide }: NavbarProps) {
         {/* Mobile Dropdown Drawer */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-slate-800/80 bg-slate-950 px-4 pt-3 pb-6 space-y-3 text-slate-200 shadow-2xl animate-in slide-in-from-top-2 duration-200">
+            <Link
+              to="/creer-devis"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-heading font-bold text-sm shadow-md shadow-emerald-600/30 flex items-center justify-center gap-2"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Créer mon premier devis (Sans compte)</span>
+            </Link>
+
+            <Link
+              to="/app/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 font-heading font-semibold text-sm flex items-center justify-center gap-2"
+            >
+              <UserCheck className="w-4 h-4 text-blue-400" />
+              <span>Mon Espace Artisan & Factures</span>
+            </Link>
+
             <button
               onClick={() => scrollToSection('probleme')}
-              className="block w-full text-left py-2.5 text-base font-heading font-medium text-slate-200 hover:text-blue-400 border-b border-slate-900"
+              className="block w-full text-left py-2 text-sm font-heading font-medium text-slate-200 hover:text-blue-400 border-b border-slate-900"
             >
               Pourquoi changer ?
             </button>
             <button
               onClick={() => scrollToSection('solution')}
-              className="block w-full text-left py-2.5 text-base font-heading font-medium text-slate-200 hover:text-blue-400 border-b border-slate-900"
+              className="block w-full text-left py-2 text-sm font-heading font-medium text-slate-200 hover:text-blue-400 border-b border-slate-900"
             >
-              Fonctionnalités & 2026
+              Fonctionnalités & Factures 2026
             </button>
             <button
               onClick={() => scrollToSection('comparaison')}
-              className="block w-full text-left py-2.5 text-base font-heading font-medium text-slate-200 hover:text-blue-400 border-b border-slate-900"
+              className="block w-full text-left py-2 text-sm font-heading font-medium text-slate-200 hover:text-blue-400 border-b border-slate-900"
             >
               Tableau comparatif
             </button>
             <button
               onClick={() => scrollToSection('temoignages')}
-              className="block w-full text-left py-2.5 text-base font-heading font-medium text-slate-200 hover:text-blue-400 border-b border-slate-900"
+              className="block w-full text-left py-2 text-sm font-heading font-medium text-slate-200 hover:text-blue-400 border-b border-slate-900"
             >
-              Témoignages artisans
+              Avis Artisans
             </button>
             <button
               onClick={() => scrollToSection('faq')}
-              className="block w-full text-left py-2.5 text-base font-heading font-medium text-slate-200 hover:text-blue-400 border-b border-slate-900"
+              className="block w-full text-left py-2 text-sm font-heading font-medium text-slate-200 hover:text-blue-400 border-b border-slate-900"
             >
               Questions fréquentes
             </button>
             
-            <div className="pt-2 flex flex-col gap-2.5">
+            <div className="pt-2 flex flex-col gap-2">
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
                   onOpenDemo();
                 }}
-                className="w-full py-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-heading font-semibold text-sm flex items-center justify-center gap-2"
+                className="w-full py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-300 font-heading text-xs flex items-center justify-center gap-2"
               >
-                <Play className="w-4 h-4 fill-blue-400 text-blue-400" />
-                <span>Tester la démo (60 sec)</span>
+                <Play className="w-3.5 h-3.5 fill-blue-400 text-blue-400" />
+                <span>Tester la démo guidée (60s)</span>
               </button>
               <button
                 onClick={() => scrollToSection('waitlist')}
-                className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-heading font-bold text-sm shadow-md shadow-blue-600/30 flex items-center justify-center gap-2"
+                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-heading font-bold text-xs shadow-md shadow-blue-600/30 flex items-center justify-center gap-2"
               >
-                <span>Rejoindre la liste d'attente (-50%)</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Bloquer tarif VIP 9,50 € / mois (-50%)</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         )}
       </header>
 
-      {/* ============================================================== */}
-      {/* 2026 MOBILE STICKY BOTTOM CONVERSION BAR (Appears on scroll) */}
-      {/* ============================================================== */}
+      {/* 2026 MOBILE STICKY BOTTOM CONVERSION BAR */}
       <div 
         className={`fixed bottom-0 left-0 right-0 z-50 md:hidden bg-slate-950/95 backdrop-blur-md border-t border-slate-800 p-3 shadow-2xl transition-all duration-300 ${
           showMobileBottomBar ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
@@ -220,17 +248,17 @@ export function Navbar({ onOpenDemo, onOpenDeployGuide }: NavbarProps) {
               Tarif VIP : <span className="text-blue-400 font-mono">9,50 € / mois</span>
             </div>
             <div className="text-[10px] text-slate-400 font-sans truncate">
-              -50% à vie • 53 places restantes
+              Sans engagement • Sans carte bancaire
             </div>
           </div>
 
-          <button
-            onClick={() => scrollToSection('waitlist')}
-            className="shrink-0 px-4 py-2.5 rounded-xl bg-blue-600 active:bg-blue-700 text-white font-heading font-bold text-xs shadow-md shadow-blue-600/30 flex items-center gap-1.5 cursor-pointer"
+          <Link
+            to="/creer-devis"
+            className="shrink-0 px-4 py-2.5 rounded-xl bg-emerald-600 active:bg-emerald-700 text-white font-heading font-bold text-xs shadow-md shadow-emerald-600/30 flex items-center gap-1.5"
           >
-            <span>Bloquer ma place</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+            <PlusCircle className="w-3.5 h-3.5" />
+            <span>Devis en 60s</span>
+          </Link>
         </div>
       </div>
     </>

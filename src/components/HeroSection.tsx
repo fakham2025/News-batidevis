@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   ArrowRight, 
   Play, 
@@ -11,7 +12,10 @@ import {
   Battery, 
   Send,
   Layers,
-  ArrowUpRight
+  ArrowUpRight,
+  PlusCircle,
+  Receipt,
+  UserCheck
 } from 'lucide-react';
 
 interface HeroSectionProps {
@@ -65,11 +69,11 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
                 <Sparkles className="w-3.5 h-3.5 text-blue-200" />
               </span>
               <span className="font-heading font-semibold text-xs sm:text-sm tracking-wide text-white">
-                🚀 Accès anticipé -50% à vie
+                🚀 Accès immédiat sans carte bancaire
               </span>
               <span className="h-3 w-px bg-slate-700 hidden sm:inline" />
               <span className="font-mono text-[10px] text-blue-400 font-bold uppercase tracking-wider hidden sm:inline">
-                PIONNIER 2026
+                CONFORME 2026
               </span>
             </div>
 
@@ -83,43 +87,56 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
 
             {/* Subtitle in Inter */}
             <p className="font-sans text-sm sm:text-lg lg:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-normal">
-              Générez des devis conformes aux mentions obligatoires 2026 en 60 secondes, directement depuis votre téléphone sur chantier. Fini les erreurs Word et les oublis.
+              Générez des devis conformes aux mentions 2026 en 60 secondes directement depuis votre smartphone sur chantier. Signez en direct ou envoyez par lien WhatsApp / SMS, et convertissez en factures d'acompte (30%) et de solde en 1 clic.
             </p>
 
             {/* Action Group: Dual Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 sm:gap-4 pt-1">
-              <button
-                onClick={onScrollToWaitlist}
-                className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-heading font-bold text-base sm:text-lg flex items-center justify-center gap-3 shadow-[0_0_35px_-5px_rgba(37,99,235,0.6)] border-t border-white/20 transition-all active:scale-[0.98] cursor-pointer group min-h-[52px]"
-              >
-                <span>Rejoindre la liste d'attente</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
-              </button>
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 sm:gap-4 pt-1">
+                <Link
+                  to="/creer-devis"
+                  className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-heading font-bold text-base sm:text-lg flex items-center justify-center gap-3 shadow-[0_0_35px_-5px_rgba(16,185,129,0.5)] border-t border-white/20 transition-all active:scale-[0.98] group min-h-[52px]"
+                >
+                  <PlusCircle className="w-5 h-5 text-emerald-200" />
+                  <span>Créer mon devis en 60s (Gratuit)</span>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
+                </Link>
 
-              <button
-                onClick={onOpenDemo}
-                className="w-full sm:w-auto px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/90 hover:border-slate-500 font-heading font-semibold text-base flex items-center justify-center gap-2.5 backdrop-blur-md transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-black/40 min-h-[52px]"
-              >
-                <div className="w-6 h-6 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
-                  <Play className="w-3 h-3 fill-blue-400" />
-                </div>
-                <span>Voir la démo</span>
-              </button>
+                <button
+                  onClick={onOpenDemo}
+                  className="w-full sm:w-auto px-6 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/90 hover:border-slate-500 font-heading font-semibold text-base flex items-center justify-center gap-2.5 backdrop-blur-md transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-black/40 min-h-[52px]"
+                >
+                  <div className="w-6 h-6 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+                    <Play className="w-3 h-3 fill-blue-400" />
+                  </div>
+                  <span>Voir la démo</span>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-center lg:justify-start gap-2 pt-1">
+                <Link
+                  to="/app/dashboard"
+                  className="text-xs text-slate-400 hover:text-blue-300 transition-colors inline-flex items-center gap-1.5 underline decoration-slate-600 underline-offset-4"
+                >
+                  <UserCheck className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Déjà artisan inscrit ? Accéder à votre tableau de bord & factures</span>
+                </Link>
+              </div>
             </div>
 
             {/* Mobile-first Quick Trust Badges Strip (visible on mobile only) */}
             <div className="grid grid-cols-3 gap-2 pt-1 sm:hidden">
               <div className="bg-slate-900/90 border border-slate-800 py-2 px-2 rounded-xl text-center">
-                <div className="font-mono text-blue-400 font-bold text-xs">⚡ 48s</div>
-                <div className="text-[10px] text-slate-400">Chiffrage express</div>
+                <div className="font-mono text-emerald-400 font-bold text-xs">⚡ 60s</div>
+                <div className="text-[10px] text-slate-400">Mode libre direct</div>
               </div>
               <div className="bg-slate-900/90 border border-slate-800 py-2 px-2 rounded-xl text-center">
-                <div className="font-mono text-blue-400 font-bold text-xs">🛡️ 2026</div>
-                <div className="text-[10px] text-slate-400">16 mentions PDP</div>
+                <div className="font-mono text-blue-400 font-bold text-xs">✍️ WhatsApp</div>
+                <div className="text-[10px] text-slate-400">Signature 1-clic</div>
               </div>
               <div className="bg-slate-900/90 border border-slate-800 py-2 px-2 rounded-xl text-center">
-                <div className="font-mono text-blue-400 font-bold text-xs">✍️ eIDAS</div>
-                <div className="text-[10px] text-slate-400">Signature SMS</div>
+                <div className="font-mono text-blue-400 font-bold text-xs">🧾 Facture</div>
+                <div className="text-[10px] text-slate-400">Acompte 30% auto</div>
               </div>
             </div>
 
@@ -147,7 +164,7 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
                     Déjà 247 artisans inscrits
                   </div>
                   <div className="text-[11px] text-slate-400 font-sans">
-                    artisans du BTP en France
+                    Plombiers, électriciens, peintres, menuisiers, maçons
                   </div>
                 </div>
               </div>
@@ -155,8 +172,8 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
               <div className="h-4 w-px bg-slate-800 hidden sm:block" />
 
               <div className="flex items-center gap-2 font-medium text-slate-300">
-                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                <span>Sans engagement</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Premier devis sans inscription</span>
               </div>
             </div>
 
@@ -180,7 +197,7 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
                 <div className="w-6 h-6 rounded-lg bg-blue-950/90 text-blue-400 border border-blue-800/60 flex items-center justify-center shrink-0">
                   <Layers className="w-3.5 h-3.5" />
                 </div>
-                <span>16 mentions auto</span>
+                <span>16 mentions auto & Décennale</span>
               </div>
             </div>
 
@@ -209,12 +226,12 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
 
             {/* 3D Floating Element #2: Top-Right Chronometer Capsule */}
             <div className="absolute -right-4 sm:-right-8 top-12 z-30 animate-float-reverse hidden sm:flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-slate-900/90 border border-slate-700/80 shadow-[0_15px_35px_rgba(0,0,0,0.6)] backdrop-blur-xl">
-              <div className="w-7 h-7 rounded-lg bg-blue-950 text-blue-400 flex items-center justify-center font-mono font-bold text-xs">
+              <div className="w-7 h-7 rounded-lg bg-emerald-950 text-emerald-400 flex items-center justify-center font-mono font-bold text-xs">
                 <Clock className="w-4 h-4" />
               </div>
               <div className="text-left">
                 <div className="font-heading font-bold text-white text-xs">Chrono : 48 sec</div>
-                <div className="font-mono text-[10px] text-blue-400 font-semibold">Devis prêt à signer</div>
+                <div className="font-mono text-[10px] text-emerald-400 font-semibold">Devis prêt à signer</div>
               </div>
             </div>
 
@@ -235,9 +252,7 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
               <span className="text-[11px] text-slate-300 font-heading font-semibold">9,50 € / mois</span>
             </div>
 
-            {/* ============================================================== */}
             {/* The 3D Asymmetric Device Frame with Isometric Rotation */}
-            {/* ============================================================== */}
             <div className="relative w-full max-w-[310px] xs:max-w-[340px] sm:max-w-[370px] transform transition-transform duration-500 hover:rotate-0 rotate-y-[-4deg] rotate-x-[3deg] preserve-3d">
               
               {/* Backlight halo glow */}
@@ -259,7 +274,7 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
                   <div className="pt-3 px-6 pb-2 flex items-center justify-between text-xs font-semibold text-slate-800 bg-slate-50 border-b border-slate-100 font-mono">
                     <span className="text-[11px] font-bold">09:41</span>
                     <div className="flex items-center gap-1.5 text-slate-600">
-                      <span className="text-[9px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded">4G CHANTIER</span>
+                      <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">4G CHANTIER</span>
                       <Wifi className="w-3.5 h-3.5" />
                       <Battery className="w-4 h-4 text-slate-800" />
                     </div>
@@ -355,20 +370,20 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
                         <span className="font-heading font-bold text-slate-800 flex items-center gap-1">
                           <PenTool className="w-3 h-3 text-blue-600" /> Signature client
                         </span>
-                        <span className="text-[10px] text-blue-600 font-mono">Sur écran</span>
+                        <span className="text-[10px] text-blue-600 font-mono">Sur écran ou WhatsApp</span>
                       </div>
 
                       <div
                         onClick={handleDeviceSign}
                         className={`h-12 rounded-lg border-2 border-dashed flex items-center justify-center cursor-pointer transition-all ${
                           deviceSigned
-                            ? 'border-blue-500 bg-blue-50 text-blue-900'
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
                             : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-500'
                         }`}
                       >
                         {deviceSigned ? (
-                          <div className="flex items-center gap-1.5 text-xs font-bold font-serif italic text-blue-950">
-                            <Check className="w-3.5 h-3.5 text-blue-600" /> "Bon pour accord - M. Dupont"
+                          <div className="flex items-center gap-1.5 text-xs font-bold font-serif italic text-emerald-950">
+                            <Check className="w-3.5 h-3.5 text-emerald-600" /> "Bon pour accord - M. Dupont"
                           </div>
                         ) : (
                           <div className="text-[10px] font-medium flex items-center gap-1 text-slate-500">
@@ -376,6 +391,15 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
                           </div>
                         )}
                       </div>
+
+                      {deviceSigned && (
+                        <div className="mt-2 p-2 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-between text-[10px]">
+                          <span className="text-blue-900 font-semibold flex items-center gap-1">
+                            <Receipt className="w-3 h-3 text-blue-600" /> Facture d'acompte 30% :
+                          </span>
+                          <span className="font-mono font-bold text-blue-950">615,45 € TTC</span>
+                        </div>
+                      )}
                     </div>
 
                   </div>
@@ -389,21 +413,22 @@ export function HeroSection({ onOpenDemo, onScrollToWaitlist }: HeroSectionProps
                       {deviceSent ? (
                         <>
                           <Check className="w-3.5 h-3.5 text-white" />
-                          <span>Envoyé par SMS & Email !</span>
+                          <span>Envoyé par WhatsApp & SMS !</span>
                         </>
                       ) : (
                         <>
                           <Send className="w-3.5 h-3.5" />
-                          <span>Envoyer au client (1-clic)</span>
+                          <span>Envoyer au client (WhatsApp/SMS)</span>
                         </>
                       )}
                     </button>
-                    <button
-                      onClick={onOpenDemo}
+                    <Link
+                      to="/creer-devis"
                       className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:text-blue-600 transition-colors cursor-pointer"
+                      title="Ouvrir le studio devis complet"
                     >
                       <ArrowUpRight className="w-4 h-4" />
-                    </button>
+                    </Link>
                   </div>
 
                 </div>

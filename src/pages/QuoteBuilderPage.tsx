@@ -20,6 +20,7 @@ import { AuthExpressModal } from '../components/builder/AuthExpressModal';
 import { SignaturePad } from '../components/signature/SignaturePad';
 import { ShareQuoteModal } from '../components/share/ShareQuoteModal';
 import { calculateQuoteTotals, QuoteLineItem, saveQuote, QuotePayload } from '../services/quotes';
+import { saveClientContact } from '../services/clientCrm';
 import { supabase } from '../lib/supabase';
 import confetti from 'canvas-confetti';
 
@@ -69,6 +70,19 @@ export function QuoteBuilderPage() {
         setCurrentUser(data.session.user);
       }
     });
+
+    // Check URL parameters for CRM pre-fill
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const qName = searchParams.get('clientName');
+      const qPhone = searchParams.get('clientPhone');
+      const qEmail = searchParams.get('clientEmail');
+      const qAddress = searchParams.get('clientAddress');
+      if (qName) setClientName(qName);
+      if (qPhone) setClientPhone(qPhone);
+      if (qEmail) setClientEmail(qEmail);
+      if (qAddress) setClientAddress(qAddress);
+    } catch {}
   }, []);
 
   // Recalculate totals
@@ -148,6 +162,17 @@ export function QuoteBuilderPage() {
     const payload = getFullPayload();
     await saveQuote(payload);
     setIsSaved(true);
+
+    // Enregistrement automatique dans le carnet clients (CRM)
+    try {
+      saveClientContact({
+        name: payload.clientName,
+        email: payload.clientEmail,
+        phone: payload.clientPhone,
+        address: payload.clientAddress,
+        lastQuoteDate: new Date().toISOString()
+      });
+    } catch {}
 
     const token = `tok_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`;
     setActiveShareToken(token);

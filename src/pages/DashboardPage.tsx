@@ -18,6 +18,8 @@ import { InvoiceCard } from '../components/dashboard/InvoiceCard';
 import { ProfileSettingsModal } from '../components/dashboard/ProfileSettingsModal';
 import { ShareQuoteModal } from '../components/share/ShareQuoteModal';
 import { FollowUpModal } from '../components/dashboard/FollowUpModal';
+import { ClientCrmModal } from '../components/dashboard/ClientCrmModal';
+import { Users } from 'lucide-react';
 import { QuotePayload } from '../services/quotes';
 import { InvoiceRecord } from '../lib/supabase';
 import { generateDepositInvoice, generateFinalInvoice, saveInvoice, getInvoices } from '../services/invoices';
@@ -34,6 +36,7 @@ export function DashboardPage() {
   const [selectedQuoteForShare, setSelectedQuoteForShare] = useState<any>(null);
   const [followUpModalOpen, setFollowUpModalOpen] = useState(false);
   const [selectedQuoteForFollowUp, setSelectedQuoteForFollowUp] = useState<any>(null);
+  const [crmModalOpen, setCrmModalOpen] = useState(false);
 
   // Load quotes and invoices
   const loadData = async () => {
@@ -200,6 +203,17 @@ export function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCrmModalOpen(true)}
+              className="text-xs flex items-center gap-1.5 cursor-pointer text-slate-700 bg-white"
+            >
+              <Users className="w-3.5 h-3.5 text-blue-600" />
+              <span className="hidden sm:inline">Carnet Clients</span>
+            </Button>
+
             <Button
               type="button"
               variant="outline"
@@ -372,6 +386,22 @@ export function DashboardPage() {
           }}
         />
       )}
+
+      {/* Client CRM Modal */}
+      <ClientCrmModal
+        isOpen={crmModalOpen}
+        onClose={() => setCrmModalOpen(false)}
+        onSelectClientForQuote={(client) => {
+          setCrmModalOpen(false);
+          const q = new URLSearchParams({
+            clientName: client.name,
+            clientPhone: client.phone || '',
+            clientEmail: client.email || '',
+            clientAddress: client.address || ''
+          });
+          window.location.href = `/creer-devis?${q.toString()}`;
+        }}
+      />
     </div>
   );
 }
